@@ -10,6 +10,9 @@ prompt_user="$(whoami)"
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
 
+autoload -Uz vcs_info
+
+
 setopt autocd              # change directory just by typing its name
 #setopt correct            # auto correct mistakes
 setopt interactivecomments # allow comments in interactive mode
@@ -54,6 +57,15 @@ zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p
 zstyle ':completion:*' use-compctl false
 zstyle ':completion:*' verbose true
 zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+
+# git information
+zstyle ':vcs_info:git:*' formats 'on branch %b'
+zstyle ':vcs_info:*' check-for-changes true
+zstyle ':vcs_info:git*' formats "%u %c %b"
+zstyle ':vcs_info:*' unstagedstr '%F{yellow}●%f'
+zstyle ':vcs_info:*' stagedstr '%F{red}✚%f'
+zstyle ':vcs_info:git:*' formats '%F{240} %u %c%F{240}%b %F{237}%r%f'
+
 
 # History configurations
 HISTFILE=~/.zsh_history
@@ -104,8 +116,8 @@ configure_prompt() {
     case "$PROMPT_ALTERNATIVE" in
         twoline)
             #PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
-            PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.red.green)} [%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
+            PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.red.green)} [%F{reset}%D{%H:%M:%S}%F{%(#.red.green)}] [%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}] ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
             # Right-side prompt with exit codes and background processes
 
             ;;
@@ -214,6 +226,7 @@ xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
 esac
 
 precmd() {
+    vcs_info
     # Print the previously configured title
     print -Pnr -- "$TERM_TITLE"
 
@@ -224,6 +237,19 @@ precmd() {
         else
             print ""
         fi
+    fi
+    if [[ -n ${vcs_info_msg_0_} ]]; then
+        # vcs_info found something (the documentation got that backwards
+        # STATUS line taken from https://github.com/robbyrussell/oh-my-zsh/blob/master/lib/git.zsh
+        STATUS=$(command git status --porcelain 2> /dev/null | tail -n1)
+        if [[ -n $STATUS ]]; then
+        #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{red}${vcs_info_msg_0_} %f%# '
+        else
+        #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{green}${vcs_info_msg_0_} %f%# '
+        fi
+    else
+        # nothing from vcs_info
+        #PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %# '
     fi
 }
 
@@ -299,3 +325,27 @@ fi
 if [ -f /etc/zsh_command_not_found ]; then
     . /etc/zsh_command_not_found
 fi
+
+
+### HELPER FUNCTIONS
+function bat_percent() {
+    battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
+    if [[ $battery_percent > 80 || $battery_status =~ "(charged|full)" ]]; then
+      battery_color="green"
+    elif [[ $battery_percent -lt 15 ]]; then
+      battery_color="red"
+    else
+      battery_color="yellow"
+    fi
+    echo "%F{$battery_color}$battery_percent%f"
+}
+function bat_state() {
+    battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
+
+    if [ $battery_state == "charging" ]; then
+      BAT_STATE_STR="🔌$(bat_percent)%%"
+    else
+      BAT_STATE_STR="🔋$(bat_percent)%%"
+    fi
+    echo $BAT_STATE_STR
+}
