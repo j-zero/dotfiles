@@ -4,7 +4,7 @@
 # Kali default icon
 #prompt_user=㉿
 prompt_user="$(whoami)"
-
+elapsed=0
 [[ "$(whoami)" == "ringej" ]] && prompt_user=Ɽ
 
 # Skull emoji for root terminal
@@ -113,10 +113,11 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 configure_prompt() {
+            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms $(bat_state)'
     case "$PROMPT_ALTERNATIVE" in
         twoline)
             #PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
+            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms $(bat_state)'
             PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.red.green)} [%F{reset}%D{%H:%M:%S}%F{%(#.red.green)}] [%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}] ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
             # Right-side prompt with exit codes and background processes
 
@@ -125,7 +126,7 @@ configure_prompt() {
             #PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}%n@%m%b%F{reset}:%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
             PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset} ${vcs_info_msg_0_} %(#.#.$) '
             #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
+            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
             ;;
         backtrack)
             PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{red}'$prompt_user'%b%F{reset}:%B%F{blue}%~%b%F{reset}%(#.#.$) '
@@ -226,6 +227,10 @@ xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
     ;;
 esac
 
+function preexec() {
+  timer=$(($(date +%s%0N)/1000000))
+}
+
 precmd() {
     vcs_info
     # Print the previously configured title
@@ -239,19 +244,13 @@ precmd() {
             print ""
         fi
     fi
-    if [[ -n ${vcs_info_msg_0_} ]]; then
-        # vcs_info found something (the documentation got that backwards
-        # STATUS line taken from https://github.com/robbyrussell/oh-my-zsh/blob/master/lib/git.zsh
-        #STATUS=$(command git status --porcelain 2> /dev/null | tail -n1)
-        #if [[ -n $STATUS ]]; then
-        #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{red}${vcs_info_msg_0_} %f%# '
-        #else
-        #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{green}${vcs_info_msg_0_} %f%# '
-        #fi
-    else
-        # nothing from vcs_info
-        #PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %# '
-    fi
+    if [ $timer ]; then
+    now=$(($(date +%s%0N)/1000000))
+    elapsed=$(($now-$timer))
+
+    #EXEC_TIME="%F{cyan}${elapsed}ms %{$reset_color%}"
+    unset timer
+  fi
 }
 
 # enable color support of ls, less and man, and also add handy aliases
@@ -350,3 +349,4 @@ function bat_state() {
     fi
     echo $BAT_STATE_STR
 }
+
