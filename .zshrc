@@ -1,7 +1,7 @@
 # ~/.zshrc file for zsh interactive shells.
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
-
+# Kali default icon
 #prompt_user=㉿
 prompt_user="$(whoami)"
 
@@ -106,16 +106,16 @@ configure_prompt() {
             #PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
             PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.red.green)} [%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
             # Right-side prompt with exit codes and background processes
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%L:%M:%S}%F{green}]%F{reset}'
+            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
 
             ;;
         oneline)
             #PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}%n@%m%b%F{reset}:%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
             PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
+            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
             ;;
         backtrack)
-            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{red}%n@%m%b%F{reset}:%B%F{blue}%~%b%F{reset}%(#.#.$) '
+            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{red}'$prompt_user'%b%F{reset}:%B%F{blue}%~%b%F{reset}%(#.#.$) '
             RPROMPT=
             ;;
     esac
@@ -232,7 +232,7 @@ if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     export LS_COLORS="$LS_COLORS:ow=30;44:" # fix ls color for folders with 777 permissions
 
-    alias ls='ls --color=auto'
+    #alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
@@ -256,9 +256,37 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-alias ll='ls -l'
-alias la='ls -A'
-alias l='ls -CF'
+#alias ll='ls -l'
+#alias la='ls -A'
+#alias l='ls -CF'
+
+if command -v exa &> /dev/null; then
+    # general use
+    alias ls='exa'                                                          # ls
+    alias l='exa -lbF --git'                                                # list, size, type, git
+    alias ll='exa -lbGF --git'                                             # long list
+    alias llm='exa -lbGd --git --sort=modified'                            # long list, modified date sort
+    alias la='exa -lbhHigUmuSa --time-style=long-iso --git --color-scale'  # all list
+    alias lx='exa -lbhHigUmuSa@ --time-style=long-iso --git --color-scale' # all + extended list
+    # specialty views
+    alias lS='exa -1'                                                              # one column, just names
+    alias lt='exa --tree --level=2'                                         # tree
+fi
+
+
+
+if command -v highlight &> /dev/null; then
+    export LESSOPEN="| $(which highlight) %s --out-format xterm256 --line-numbers --quiet --force --style solarized-light"
+    export LESS=" -R"
+    alias less='less -m -N -g -i -J --line-numbers --underline-special'
+    alias more='less'
+    # Use "highlight" in place of "cat"
+    #alias cat="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
+    alias show="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
+fi
+
+alias todo="grep 'TODO\:\|REVIEW\:\|BUG\:\|NOTE\:\|FIXME\:\|XXX\:\|HACK\:\|UX\:' * -nri"
+
 
 # enable auto-suggestions based on the history
 if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
