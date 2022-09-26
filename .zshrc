@@ -10,6 +10,8 @@ elapsed=0
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
 
+
+
 autoload -Uz vcs_info
 
 
@@ -64,7 +66,8 @@ zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:git*' formats "%u %c %b"
 zstyle ':vcs_info:*' unstagedstr '%F{yellow}●%f '
 zstyle ':vcs_info:*' stagedstr '%F{red}✚%f '
-zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b %F{237}%r%f'
+#zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b %F{237}%r%f'
+zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b%f'
 
 
 # History configurations
@@ -113,25 +116,19 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 configure_prompt() {
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms $(bat_state)'
-    case "$PROMPT_ALTERNATIVE" in
-        twoline)
-            #PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
-            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms $(bat_state)'
-            PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$prompt_user$'%b%F{%(#.red.green)} [%F{reset}%D{%H:%M:%S}%F{%(#.red.green)}] [%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}] ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
-            # Right-side prompt with exit codes and background processes
 
-            ;;
-        oneline)
-            #PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}%n@%m%b%F{reset}:%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
-            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset} ${vcs_info_msg_0_} %(#.#.$) '
-            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
-            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
-            ;;
-        backtrack)
-            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{red}'$prompt_user'%b%F{reset}:%B%F{blue}%~%b%F{reset}%(#.#.$) '
-            RPROMPT=
-            ;;
+  RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms'
+
+  case "$PROMPT_ALTERNATIVE" in
+      twoline)
+          #PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[%F{reset}%D{%H:%M:%S}%F{%(#.red.green)}] $(prompt_host)$(bat_state) %b%F{%(#.red.green)}[%B%f%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}] ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
+          PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[ %F{reset}%D{%H:%M:%S}%F{237} | %f$(bat_state)%F{%(#.red.green)} ]%f$(prompt_host) %(6~.%-1~/…/%4~.%5~) ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
+          # Right-side prompt with exit codes and background processes
+
+          ;;
+      oneline)
+          PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset} ${vcs_info_msg_0_} %(#.#.$) '
+          ;;
     esac
     unset prompt_symbol
 }
@@ -330,7 +327,7 @@ fi
 ### HELPER FUNCTIONS
 function bat_percent() {
     local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
-    if [[ $battery_percent > 50 ]]; then
+    if [[ $battery_percent -gt 50 ]]; then
       battery_color="green"
     elif [[ $battery_percent -lt 15 ]]; then
       battery_color="red"
@@ -347,6 +344,15 @@ function bat_state() {
     else
       BAT_STATE_STR="🔋$(bat_percent)%%"
     fi
-    echo $BAT_STATE_STR
+    #echo "%F{%(#.red.green)}[%f$BAT_STATE_STR%F{%(#.red.green)}]%f"
+    echo "$BAT_STATE_STR"
+}
+function prompt_host(){
+  local p_host=""
+  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+    #p_host="%F{%(#.red.green)}[%f%F{blue}@%F{white}%m%F{%(#.red.green)}]%f "
+    p_host="%F{blue}@%F{white}%m%f "
+  fi
+  echo $p_host
 }
 
