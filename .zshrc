@@ -5,7 +5,7 @@
 #prompt_user=㉿
 prompt_user="$(whoami)"
 elapsed=0
-[[ "$(whoami)" == "ringej" ]] && prompt_user=Ɽ
+[[ "$(whoami)" == "ringej" || "$(whoami)" == "johannes" ]] && prompt_user=Ɽ
 
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
