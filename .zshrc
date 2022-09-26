@@ -298,15 +298,22 @@ fi
 
 
 
-if command -v highlight &> /dev/null; then
-    export LESSOPEN="| $(which highlight) %s --out-format xterm256 --line-numbers --quiet --force --style solarized-light"
-    export LESS=" -R"
-    alias less='less -m -N -g -i -J --line-numbers --underline-special'
-    alias more='less'
+#if command -v highlight &> /dev/null; then
+#    export LESSOPEN="| $(which highlight) %s --out-format xterm256 --line-numbers --quiet --force --style solarized-light"
+#    export LESS=" -R"
+#    alias less='less -m -N -g -i -J --line-numbers --underline-special'
+#    alias more='less'
     # Use "highlight" in place of "cat"
     #alias cat="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
-    alias show="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
+    #alias show="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
+#fi
+
+if command -v batcat &> /dev/null; then
+  alias less='batcat'
+  alias more='batcat'
+  alias cat='batcat --paging=never' 
 fi
+
 
 alias todo="grep 'TODO\:\|REVIEW\:\|BUG\:\|NOTE\:\|FIXME\:\|XXX\:\|HACK\:\|UX\:' * -nri"
 
