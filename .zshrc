@@ -330,7 +330,7 @@ fi
 ### HELPER FUNCTIONS
 function bat_percent() {
     battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
-    if [[ $battery_percent > 80 || $battery_status =~ "(charged|full)" ]]; then
+    if [[ $battery_percent > 50 ]]; then
       battery_color="green"
     elif [[ $battery_percent -lt 15 ]]; then
       battery_color="red"
