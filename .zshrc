@@ -329,7 +329,7 @@ fi
 
 ### HELPER FUNCTIONS
 function bat_percent() {
-    battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
+    local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
     if [[ $battery_percent > 50 ]]; then
       battery_color="green"
     elif [[ $battery_percent -lt 15 ]]; then
@@ -340,7 +340,7 @@ function bat_percent() {
     echo "%F{$battery_color}$battery_percent%f"
 }
 function bat_state() {
-    battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
+    local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
 
     if [ $battery_state == "charging" ]; then
       BAT_STATE_STR="🔌$(bat_percent)%%"
