@@ -62,9 +62,9 @@ zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
 zstyle ':vcs_info:git:*' formats 'on branch %b'
 zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:git*' formats "%u %c %b"
-zstyle ':vcs_info:*' unstagedstr '%F{yellow}●%f'
-zstyle ':vcs_info:*' stagedstr '%F{red}✚%f'
-zstyle ':vcs_info:git:*' formats '%F{240} %u %c%F{240}%b %F{237}%r%f'
+zstyle ':vcs_info:*' unstagedstr '%F{yellow}●%f '
+zstyle ':vcs_info:*' stagedstr '%F{red}✚%f '
+zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b %F{237}%r%f'
 
 
 # History configurations
@@ -123,8 +123,9 @@ configure_prompt() {
             ;;
         oneline)
             #PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}%n@%m%b%F{reset}:%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
-            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset}%(#.#.$) '
-            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
+            PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset} ${vcs_info_msg_0_} %(#.#.$) '
+            #RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{green}[%F{reset}%D{%H:%M:%S}%F{green}]%F{reset}'
+            RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)$(bat_state)'
             ;;
         backtrack)
             PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{red}'$prompt_user'%b%F{reset}:%B%F{blue}%~%b%F{reset}%(#.#.$) '
@@ -241,12 +242,12 @@ precmd() {
     if [[ -n ${vcs_info_msg_0_} ]]; then
         # vcs_info found something (the documentation got that backwards
         # STATUS line taken from https://github.com/robbyrussell/oh-my-zsh/blob/master/lib/git.zsh
-        STATUS=$(command git status --porcelain 2> /dev/null | tail -n1)
-        if [[ -n $STATUS ]]; then
+        #STATUS=$(command git status --porcelain 2> /dev/null | tail -n1)
+        #if [[ -n $STATUS ]]; then
         #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{red}${vcs_info_msg_0_} %f%# '
-        else
+        #else
         #    PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %F{green}${vcs_info_msg_0_} %f%# '
-        fi
+        #fi
     else
         # nothing from vcs_info
         #PROMPT='%F{green}%n%F{orange}@%F{yellow}%m:%F{7}%3~%f %# '
