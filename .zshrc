@@ -5,7 +5,12 @@
 #
 ENABLE_BATTERY=1
 ENABLE_CLOCK=1
-ENABLE_GIT=1
+ENABLE_GIT_INFO=1
+
+ENABLE_PRETTY_PATH=1
+ENABLE_PRETTY_PATH_GIT_DIR=0
+
+ENABLE_EXEC_TIME=1
 
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
@@ -15,6 +20,11 @@ ONE_LINE_PROMPT_CHAR="%F{blue}➜%f "
 
 PROMPT_ALTERNATIVE=twoline
 NEWLINE_BEFORE_PROMPT=yes
+
+DIR_CHAR="%F{cyan}/%f"
+MAX_FOLDER_DEPTH=255
+
+HOME_SYMBOL=🏠
 
 prompt_user="$(whoami)"
 # logo for users
@@ -69,6 +79,10 @@ bindkey ^P toggle_oneline_prompt
 
 zle -N toggle_prompt_info
 bindkey ^H toggle_prompt_info
+
+zle -N toggle_pretty_dir
+bindkey ^G toggle_pretty_dir
+
 
 # enable completion features
 autoload -Uz compinit
@@ -135,7 +149,7 @@ fi
 configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
-  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.) %F{cyan}$(echo $elapsed)%fms'
+  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.) %F{cyan}$(exec_time)%f'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
@@ -323,9 +337,32 @@ fi
 ### HELPER FUNCTIONS
 
 directory(){
- echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
+  # shorten after 6 folders
+ #echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
+ #get_pretty_path
+  if [[ $ENABLE_PRETTY_PATH -eq 1 ]]; then
+    get_pretty_path;
+  else
+    echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
+  fi
 }
+exec_time(){
+  if [[ $ENABLE_EXEC_TIME -eq 1 ]]; then
+    local MS=$(($elapsed%1000))
+    local T=$(($elapsed/1000))
 
+    local D=$((T/60/60/24))
+    local H=$((T/60/60%24))
+    local M=$((T/60%60))
+    local S=$((T%60))
+
+    (( $D > 0 )) && echo -n "%F{cyan}$D%F{white}d%f"
+    (( $H > 0 )) && echo -n "%F{cyan}$H%F{white}h%f"
+    (( $M > 0 )) && echo -n "%F{cyan}$M%F{white}m%f"
+    #(( $D > 0 || $H > 0 || $M > 0 )) && echo ""
+    echo -n "%F{cyan}$S%F{white}.%F{cyan}$(printf '%03d' $MS)%F{white}s%f"
+  fi
+}
 toggle_oneline_prompt(){
     if [ "$PROMPT_ALTERNATIVE" = oneline ]; then
         PROMPT_ALTERNATIVE=twoline
@@ -341,6 +378,16 @@ toggle_prompt_info(){
       SHOW_INFO=0
     else
       SHOW_INFO=1
+    fi
+    #configure_prompt
+    zle reset-prompt
+}
+
+toggle_pretty_dir(){
+    if [[ $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
+      ENABLE_PRETTY_PATH_GIT_DIR=0
+    else
+      ENABLE_PRETTY_PATH_GIT_DIR=1
     fi
     #configure_prompt
     zle reset-prompt
@@ -384,7 +431,7 @@ function clock(){
 
 git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
-  if [[ $SHOW_INFO -eq 1 && $ENABLE_GIT -eq 1 ]]; then
+  if [[ $SHOW_INFO -eq 1 && $ENABLE_GIT_INFO -eq 1 ]]; then
     # Exit if not inside a Git repository
     ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
 
@@ -539,6 +586,90 @@ sudo-command-line() {
     # Redisplay edit buffer (compatibility with zsh-syntax-highlighting)
     zle redisplay
   }
+}
+function get_rel_git_path(){
+    ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && echo Foo! && return
+
+    local targetFolder=$(git rev-parse --show-toplevel)
+    local git_workdir=$(basename $targetFolder)
+    local currentFolder=$(pwd)
+    local result=
+
+    while [ "$currentFolder" != "$targetFolder" ];do
+      if [ -z $result ]; then
+        result="%F{white}$(basename $currentFolder)%f" # no ending slash
+      else
+        result="$(basename $currentFolder)$DIR_CHAR$result"
+      fi
+      currentFolder=$(dirname $currentFolder)
+    done
+
+    echo "%F{237}%B%F{cyan}$git_workdir%f%b$DIR_CHAR$result"
+}
+function get_pretty_path(){
+
+    # git stuff
+    local git_dir=
+    local is_in_git=0
+    git rev-parse --is-inside-work-tree > /dev/null 2>&1 && is_in_git=1
+
+    local counter=0
+    local is_named_folder=0
+    local depth=${#${PWD//[!\/]}} # path depth
+    
+    if [[ $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
+      get_rel_git_path
+      return
+    fi
+
+    [[ $is_in_git -eq 1 ]] && git_dir=$(git rev-parse --show-toplevel)
+
+    #echo "DEBUG git: $is_in_git"
+    #echo "DEBUG git_dir: $git_dir"
+    #echo "DEBUG HOME: $HOME"
+    #echo "DEBUG depth: $depth"
+
+    local targetFolder=/
+    local currentFolder=$(pwd)
+    local result=
+    local is_shortening=0
+
+    while [ "$currentFolder" != "$targetFolder" ];do
+
+    #echo $counter
+    #echo "DEBUG currentFolder: $currentFolder"
+    local folderName=$(basename $currentFolder)
+      if [ "$currentFolder" = "$HOME" ]; then # is current git directory
+        #echo "DEBUG HOME!!"
+        if [ -z $result ]; then
+            result="$HOME_SYMBOL"
+        else
+            result="$HOME_SYMBOL$DIR_CHAR$result"
+        fi
+        currentFolder=$(dirname "$HOME")
+        is_named_folder=1
+      elif [ ! -z $git_dir ] && [ "$currentFolder" = "$git_dir" ]; then # is current git directory
+        result="%F{237}%B%F{cyan}$folderName%b%f$DIR_CHAR$result"
+      elif [ -z $result ]; then
+        result="%F{white}$folderName%f" # current dir no ending slash
+
+      else
+        if [ $depth -ne $MAX_FOLDER_DEPTH ] && [ $counter -lt $MAX_FOLDER_DEPTH ]; then
+            result="$folderName$DIR_CHAR$result"
+        else
+            result="${folderName:0:1}…$DIR_CHAR$result"
+            #result="$counter... $folderName$DIR_CHAR$result"
+            #result="...$DIR_CHAR$result"
+            is_shortening=1
+            #currentFolder=$(dirname $currentFolder)
+        fi
+    fi
+      currentFolder=$(dirname $currentFolder)
+      ((counter++))
+    done
+
+    [[ "$is_named_folder" -eq 0 ]] && echo -n "$DIR_CHAR"
+    echo "$result"
 }
 
 
