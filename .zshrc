@@ -403,6 +403,8 @@ battery_info() {
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
+      local battery_color="green"
+      local BAT_STATE_STR=""
 
       [ -z $battery_state ] && return
 
