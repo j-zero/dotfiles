@@ -25,8 +25,8 @@ NEWLINE_BEFORE_PROMPT=yes
 DIR_CHAR="%F{cyan}/%f"
 MAX_FOLDER_DEPTH=255
 
-HOME_SYMBOL=🏠
-#HOME_SYMBOL="~"
+#HOME_SYMBOL=🏠
+HOME_SYMBOL="~"
 
 prompt_user="$(whoami)"
 # logo for users
