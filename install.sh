@@ -6,6 +6,9 @@ mkdir -p ~/.vim/colors
 cp -v ~/.zshrc ~/.zshrc.datenpirat.bak
 cp -v ~/.vimrc ~/.vimrc.datenpirat.bak
 cp -v .config/terminator/config ~/.config/terminator/config.datenpirat.bak
+#cp -v -r ./.zsh ~/.zsh
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
 
 # Install
 cp -v .zshrc ~/
