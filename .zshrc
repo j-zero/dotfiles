@@ -23,6 +23,8 @@ prompt_user="$(whoami)"
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
 
+[ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
+
 setopt autocd              # change directory just by typing its name
 #setopt correct            # auto correct mistakes
 setopt interactivecomments # allow comments in interactive mode
