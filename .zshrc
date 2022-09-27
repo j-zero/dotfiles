@@ -3,7 +3,7 @@
 
 # config
 #
-ENABLE_BATTERY=1
+ENABLE_BATTERY=0
 ENABLE_BATTERY_ON_CHARGE=0
 ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
@@ -19,13 +19,14 @@ ENABLE_HOST_ALWAYS=0
 TWO_LINE_PROMPT_CHAR=
 ONE_LINE_PROMPT_CHAR="%F{blue}➜%f "
 
-PROMPT_ALTERNATIVE=twoline
+PROMPT_ALTERNATIVE=oneline
 NEWLINE_BEFORE_PROMPT=yes
 
 DIR_CHAR="%F{cyan}/%f"
 MAX_FOLDER_DEPTH=255
 
-HOME_SYMBOL=🏠
+#HOME_SYMBOL=🏠
+HOME_SYMBOL="~"
 
 prompt_user="$(whoami)"
 # logo for users
@@ -413,11 +414,11 @@ battery_info() {
       if [[ $battery_state == "charging" || $battery_state == "fully-charged" ]]; then
         if [[ $ENABLE_BATTERY_ON_CHARGE -eq 1 ]]; then
           BAT_STATE_STR="🔌%F{$battery_color}$battery_percent%f%%"
-          echo "%F{237} | %f$BAT_STATE_STR%f"
+          echo " $BAT_STATE_STR%f"
         fi
       else
           BAT_STATE_STR="🔋%F{$battery_color}$battery_percent%f%%"
-          echo "%F{237} | %f$BAT_STATE_STR%f"
+          echo " $BAT_STATE_STR%f"
       fi
     fi
 }
@@ -481,7 +482,7 @@ git_info() {
     fi
 
     local -a GIT_INFO
-    GIT_INFO+=( "%F{240} |  $GIT_LOCATION" )
+    GIT_INFO+=( " %F{240} $GIT_LOCATION" )
     [ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
     [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
     [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)FLAGS}" )
