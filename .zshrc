@@ -352,7 +352,7 @@ fi
 
 
 alias todo="grep 'TODO\:\|REVIEW\:\|BUG\:\|NOTE\:\|FIXME\:\|XXX\:\|HACK\:\|UX\:' * -nri"
-
+alias cdg="git rev-parse --is-inside-work-tree > /dev/null 2>&1 && cd $(git rev-parse --show-toplevel)"
 
 # enable auto-suggestions based on the history
 if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
