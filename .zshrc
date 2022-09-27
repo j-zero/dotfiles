@@ -369,7 +369,7 @@ fi
 
 ### HELPER FUNCTIONS
 user(){
-  prompt_user="$(whoami)"
+  local prompt_user="$(whoami)"
 
   # logo for users 
   [[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
