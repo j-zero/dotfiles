@@ -9,7 +9,7 @@ ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
 
 ENABLE_PRETTY_PATH=1
-ENABLE_PRETTY_PATH_GIT_DIR=0
+ENABLE_PRETTY_PATH_GIT_DIR=1
 
 ENABLE_EXEC_TIME=1
 
@@ -593,8 +593,6 @@ sudo-command-line() {
   }
 }
 function get_rel_git_path(){
-    ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && echo Foo! && return
-
     local targetFolder=$(git rev-parse --show-toplevel)
     local git_workdir=$(basename $targetFolder)
     local currentFolder=$(pwd)
@@ -622,7 +620,7 @@ function get_pretty_path(){
     local is_named_folder=0
     local depth=${#${PWD//[!\/]}} # path depth
     
-    if [[ $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
+    if [[ $is_in_git -eq 1 && $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
       get_rel_git_path
       return
     fi
