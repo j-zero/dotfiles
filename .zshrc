@@ -98,7 +98,7 @@ git_include(){
   FOLDER=$2
   SCRIPT=$3
   EXECUTE_FILE="$PLUGIN_BASE_DIR/$FOLDER/$SCRIPT"
-  if [ -f "$EXECUTE_FILE" ]; then
+  if [ -d "$PLUGIN_BASE_DIR/$FOLDER" ]; then
     [[ $AUTOUPDATE -eq 1 ]] && echo "Updating $FOLDER" && git -C "$PLUGIN_BASE_DIR/$FOLDER" pull
   else
     git clone "$GIT_URL" "$PLUGIN_BASE_DIR/$FOLDER"
@@ -195,7 +195,7 @@ configure_prompt() {
         PROMPT=$'%F{%(#.red.green)}[$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $(directory) $ONE_LINE_PROMPT_CHAR'
           ;;
     esac
-    unset prompt_symbol
+    unset prompt_user
 }
 
 TMOUT=1
