@@ -187,7 +187,7 @@ configure_prompt() {
         PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f  $(directory) $ONE_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) $ONE_LINE_PROMPT_CHAR'
           ;;
     esac
     #unset prompt_user
