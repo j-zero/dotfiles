@@ -19,14 +19,14 @@ ENABLE_HOST_ALWAYS=0
 TWO_LINE_PROMPT_CHAR=
 ONE_LINE_PROMPT_CHAR="%F{blue}➜%f "
 
-PROMPT_ALTERNATIVE=oneline
+PROMPT_ALTERNATIVE=twoline
 NEWLINE_BEFORE_PROMPT=yes
 
 DIR_CHAR="%F{cyan}/%f"
 MAX_FOLDER_DEPTH=255
 
-#HOME_SYMBOL=🏠
-HOME_SYMBOL="~"
+HOME_SYMBOL=🏠
+#HOME_SYMBOL="~"
 
 prompt_user="$(whoami)"
 # logo for users
@@ -155,10 +155,10 @@ configure_prompt() {
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $(directory) $ONE_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}[$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $(directory) $ONE_LINE_PROMPT_CHAR'
           ;;
     esac
     unset prompt_symbol
@@ -425,13 +425,13 @@ battery_info() {
 host_info(){
   if  [[ $SHOW_INFO -eq 1 ]]; then
    if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
-     echo "%F{237} | %F{blue}@%F{white}%m%f"
+     echo " %F{blue}@%F{white}%m%f"
    fi
   fi
 }
 function clock(){
   if [[ $ENABLE_CLOCK -eq 1 ]]; then
-    echo "%f%D{%H:%M:%S}"
+    echo " %f%D{%H:%M:%S}"
   fi
 }
 
