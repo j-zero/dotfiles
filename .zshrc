@@ -4,6 +4,7 @@
 # config
 #
 ENABLE_BATTERY=1
+ENABLE_BATTERY_ON_CHARGE=0
 ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
 
@@ -399,6 +400,8 @@ battery_info() {
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
 
+      [ -z $battery_state ] && return
+
       if [[ $battery_percent -gt 50 ]]; then
         battery_color="green"
       elif [[ $battery_percent -lt 15 ]]; then
@@ -407,13 +410,15 @@ battery_info() {
         battery_color="yellow"
       fi
 
-      if [ $battery_state == "charging" ]; then
-        BAT_STATE_STR="🔌%F{$battery_color}$battery_percent%f%%"
+      if [[ $battery_state == "charging" || $battery_state == "fully-charged" ]]; then
+        if [[ $ENABLE_BATTERY_ON_CHARGE -eq 1 ]]; then
+          BAT_STATE_STR="🔌%F{$battery_color}$battery_percent%f%%"
+          echo "%F{237} | %f$BAT_STATE_STR%f"
+        fi
       else
-        BAT_STATE_STR="🔋%F{$battery_color}$battery_percent%f%%"
+          BAT_STATE_STR="🔋%F{$battery_color}$battery_percent%f%%"
+          echo "%F{237} | %f$BAT_STATE_STR%f"
       fi
-      echo "%F{237} | %f$BAT_STATE_STR%f"
-
     fi
 }
 host_info(){
