@@ -2,14 +2,16 @@
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
 # config
-ENABLE_BATTERY=0
+ENABLE_BATTERY=1
 ENABLE_CLOCK=1
+ENABLE_GIT=1
+ENABLE_HOST_ALWAYS=1
 
+TWO_LINE_PROMPT_CHAR=
+ONE_LINE_PROMPT_CHAR="➜ "
 
-# Kali default icon
-#prompt_user=㉿
 prompt_user="$(whoami)"
-elapsed=0
+# logo for users
 [[ "$(whoami)" == "ringej" || "$(whoami)" == "johannes" ]] && prompt_user=Ɽ
 
 # Skull emoji for root terminal
@@ -24,11 +26,13 @@ setopt notify              # report the status of background jobs immediately
 setopt numericglobsort     # sort filenames numerically when it makes sense
 setopt promptsubst         # enable command substitution in prompt
 
-autoload -Uz vcs_info
 WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
 
 # hide EOL sign ('%')
 PROMPT_EOL_MARK=""
+
+# timer variable
+elapsed=0
 
 # configure key keybindings
 bindkey -e                                        # emacs key bindings
@@ -43,6 +47,15 @@ bindkey '^[[6~' end-of-buffer-or-history          # page down
 bindkey '^[[H' beginning-of-line                  # home
 bindkey '^[[F' end-of-line                        # end
 bindkey '^[[Z' undo                               # shift + tab undo last action
+#
+# Defined shortcut keys: [Esc] [Esc]
+zle -N sudo-command-line
+bindkey -M emacs '\e\e' sudo-command-line
+bindkey -M vicmd '\e\e' sudo-command-line
+bindkey -M viins '\e\e' sudo-command-line
+
+zle -N toggle_oneline_prompt
+bindkey ^P toggle_oneline_prompt
 
 # enable completion features
 autoload -Uz compinit
@@ -60,16 +73,6 @@ zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p
 zstyle ':completion:*' use-compctl false
 zstyle ':completion:*' verbose true
 zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-# git information
-zstyle ':vcs_info:git:*' formats 'on branch %b'
-zstyle ':vcs_info:*' check-for-changes true
-zstyle ':vcs_info:git*' formats "%u %c %b"
-zstyle ':vcs_info:*' unstagedstr '%F{yellow}●%f '
-zstyle ':vcs_info:*' stagedstr '%F{red}✚%f '
-#zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b %F{237}%r%f'
-zstyle ':vcs_info:git:*' formats '%F{240} %u%c%F{240}%b%f'
-
 
 # History configurations
 HISTFILE=~/.zsh_history
@@ -119,15 +122,15 @@ fi
 configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
-  RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms'
+  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.) %F{cyan}$(echo $elapsed)%fms'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-          PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[ %f%D{%H:%M:%S}$(bat_state)%F{%(#.red.green)} ]%f$(prompt_host) %(6~.%-1~/…/%4~.%5~) ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
-
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(6~.%-1~/…/%4~.%5~)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
           ;;
       oneline)
-          PROMPT=$'${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}%B%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%F{reset} ${vcs_info_msg_0_} %(#.#.$) '
+        PROMPT=$'%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(6~.%-1~/…/%4~.%5~) %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $ONE_LINE_PROMPT_CHAR'
+        #PROMPT=$'%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%f$(git_info) %(#.%F{red}#.%F{blue}$)%f '
           ;;
     esac
     unset prompt_symbol
@@ -203,17 +206,6 @@ else
 fi
 unset color_prompt force_color_prompt
 
-toggle_oneline_prompt(){
-    if [ "$PROMPT_ALTERNATIVE" = oneline ]; then
-        PROMPT_ALTERNATIVE=twoline
-    else
-        PROMPT_ALTERNATIVE=oneline
-    fi
-    configure_prompt
-    zle reset-prompt
-}
-zle -N toggle_oneline_prompt
-bindkey ^P toggle_oneline_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
@@ -225,11 +217,11 @@ xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
 esac
 
 function preexec() {
+  # exec timer
   timer=$(($(date +%s%0N)/1000000))
 }
 
 precmd() {
-    vcs_info
     # Print the previously configured title
     print -Pnr -- "$TERM_TITLE"
 
@@ -241,11 +233,12 @@ precmd() {
             print ""
         fi
     fi
+
+    # exec timer
     if [ $timer ]; then
     now=$(($(date +%s%0N)/1000000))
     elapsed=$(($now-$timer))
 
-    #EXEC_TIME="%F{cyan}${elapsed}ms %{$reset_color%}"
     unset timer
   fi
 }
@@ -278,11 +271,6 @@ if [ -x /usr/bin/dircolors ]; then
     zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 fi
 
-# some more ls aliases
-#alias ll='ls -l'
-#alias la='ls -A'
-#alias l='ls -CF'
-
 if command -v exa &> /dev/null; then
     # general use
     alias ls='exa'                                                          # ls
@@ -296,17 +284,6 @@ if command -v exa &> /dev/null; then
     alias lt='exa --tree --level=2'                                         # tree
 fi
 
-
-
-#if command -v highlight &> /dev/null; then
-#    export LESSOPEN="| $(which highlight) %s --out-format xterm256 --line-numbers --quiet --force --style solarized-light"
-#    export LESS=" -R"
-#    alias less='less -m -N -g -i -J --line-numbers --underline-special'
-#    alias more='less'
-    # Use "highlight" in place of "cat"
-    #alias cat="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
-    #alias show="highlight $1 --out-format xterm256 --line-numbers --quiet --force --style solarized-light $2"
-#fi
 
 if command -v batcat &> /dev/null; then
   alias less='batcat'
@@ -332,34 +309,43 @@ fi
 
 
 ### HELPER FUNCTIONS
-function bat_percent() {
-    local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
-    if [[ $battery_percent -gt 50 ]]; then
-      battery_color="green"
-    elif [[ $battery_percent -lt 15 ]]; then
-      battery_color="red"
+toggle_oneline_prompt(){
+    if [ "$PROMPT_ALTERNATIVE" = oneline ]; then
+        PROMPT_ALTERNATIVE=twoline
     else
-      battery_color="yellow"
+        PROMPT_ALTERNATIVE=oneline
     fi
-    echo "%F{$battery_color}$battery_percent%f"
+    configure_prompt
+    zle reset-prompt
 }
-function bat_state() {
+
+battery_info() {
     if [[ $ENABLE_BATTERY -eq 1 ]]; then
+
+      local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
 
-      if [ $battery_state == "charging" ]; then
-        BAT_STATE_STR="🔌$(bat_percent)%%"
+      if [[ $battery_percent -gt 50 ]]; then
+        battery_color="green"
+      elif [[ $battery_percent -lt 15 ]]; then
+        battery_color="red"
       else
-        BAT_STATE_STR="🔋$(bat_percent)%%"
+        battery_color="yellow"
+      fi
+
+      if [ $battery_state == "charging" ]; then
+        BAT_STATE_STR="🔌%F{$battery_color}$battery_percent%f%%"
+      else
+        BAT_STATE_STR="🔋%F{$battery_color}$battery_percent%f%%"
       fi
       echo "%F{237} | %f$BAT_STATE_STR%f"
     fi
 }
-function prompt_host(){
+host_info(){
   local p_host=""
-  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
     #p_host="%F{%(#.red.green)}[%f%F{blue}@%F{white}%m%F{%(#.red.green)}]%f "
-    p_host="%F{blue}@%F{white}%m%f "
+    p_host="%F{237} | %F{blue}@%F{white}%m%f"
   fi
   echo $p_host
 }
@@ -368,4 +354,164 @@ function clock(){
     echo "%f%D{%H:%M:%S}"
   fi
 }
+
+git_info() {
+  # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
+  if [[ $ENABLE_GIT -eq 1 ]]; then
+    # Exit if not inside a Git repository
+    ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
+
+    # Git branch/tag, or name-rev if on detached head
+    local GIT_LOCATION=${$(git symbolic-ref -q HEAD || git name-rev --name-only --no-undefined --always HEAD)#(refs/heads/|tags/)}
+
+    local AHEAD="%F{red}⇡NUM%f"
+    local BEHIND="%F{cyan}⇣NUM%f"
+    local MERGING="%F{magenta}⚡︎%f"
+    local UNTRACKED="%F{red}●%f"
+    local MODIFIED="%F{yellow}●%f"
+    local STAGED="%F{green}●%f"
+
+    local -a DIVERGENCES
+    local -a FLAGS
+
+    local NUM_AHEAD="$(git log --oneline @{u}.. 2> /dev/null | wc -l | tr -d ' ')"
+    if [ "$NUM_AHEAD" -gt 0 ]; then
+      DIVERGENCES+=( "${AHEAD//NUM/$NUM_AHEAD}" )
+    fi
+
+    local NUM_BEHIND="$(git log --oneline ..@{u} 2> /dev/null | wc -l | tr -d ' ')"
+    if [ "$NUM_BEHIND" -gt 0 ]; then
+      DIVERGENCES+=( "${BEHIND//NUM/$NUM_BEHIND}" )
+    fi
+
+    local GIT_DIR="$(git rev-parse --git-dir 2> /dev/null)"
+    if [ -n $GIT_DIR ] && test -r $GIT_DIR/MERGE_HEAD; then
+      FLAGS+=( "$MERGING" )
+    fi
+
+    if [[ -n $(git ls-files --other --exclude-standard 2> /dev/null) ]]; then
+      FLAGS+=( "$UNTRACKED" )
+    fi
+
+    if ! git diff --quiet 2> /dev/null; then
+      FLAGS+=( "$MODIFIED" )
+    fi
+
+    if ! git diff --cached --quiet 2> /dev/null; then
+      FLAGS+=( "$STAGED" )
+    fi
+
+    local -a GIT_INFO
+    GIT_INFO+=( "%F{240} |  $GIT_LOCATION" )
+    [ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
+    [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
+    [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)FLAGS}" )
+    #GIT_INFO+=( "" )
+    echo "${(j: :)GIT_INFO}%f"
+  fi
+
+}
+
+# ------------------------------------------------------------------------------
+# Description
+# -----------
+#
+# sudo or sudo -e (replacement for sudoedit) will be inserted before the command
+#
+# ------------------------------------------------------------------------------
+# Authors
+# -------
+#
+# * Dongweiming <ciici123@gmail.com>
+# * Subhaditya Nath <github.com/subnut>
+# * Marc Cornellà <github.com/mcornella>
+# * Carlo Sala <carlosalag@protonmail.com>
+#
+# ------------------------------------------------------------------------------
+
+__sudo-replace-buffer() {
+  local old=$1 new=$2 space=${2:+ }
+
+  # if the cursor is positioned in the $old part of the text, make
+  # the substitution and leave the cursor after the $new text
+  if [[ $CURSOR -le ${#old} ]]; then
+    BUFFER="${new}${space}${BUFFER#$old }"
+    CURSOR=${#new}
+  # otherwise just replace $old with $new in the text before the cursor
+  else
+    LBUFFER="${new}${space}${LBUFFER#$old }"
+  fi
+}
+
+sudo-command-line() {
+  # If line is empty, get the last run command from history
+  [[ -z $BUFFER ]] && LBUFFER="$(fc -ln -1)"
+
+  # Save beginning space
+  local WHITESPACE=""
+  if [[ ${LBUFFER:0:1} = " " ]]; then
+    WHITESPACE=" "
+    LBUFFER="${LBUFFER:1}"
+  fi
+
+  {
+    # If $SUDO_EDITOR or $VISUAL are defined, then use that as $EDITOR
+    # Else use the default $EDITOR
+    local EDITOR=${SUDO_EDITOR:-${VISUAL:-$EDITOR}}
+
+    # If $EDITOR is not set, just toggle the sudo prefix on and off
+    if [[ -z "$EDITOR" ]]; then
+      case "$BUFFER" in
+        sudo\ -e\ *) __sudo-replace-buffer "sudo -e" "" ;;
+        sudo\ *) __sudo-replace-buffer "sudo" "" ;;
+        *) LBUFFER="sudo $LBUFFER" ;;
+      esac
+      return
+    fi
+
+    # Check if the typed command is really an alias to $EDITOR
+
+    # Get the first part of the typed command
+    local cmd="${${(Az)BUFFER}[1]}"
+    # Get the first part of the alias of the same name as $cmd, or $cmd if no alias matches
+    local realcmd="${${(Az)aliases[$cmd]}[1]:-$cmd}"
+    # Get the first part of the $EDITOR command ($EDITOR may have arguments after it)
+    local editorcmd="${${(Az)EDITOR}[1]}"
+
+    # Note: ${var:c} makes a $PATH search and expands $var to the full path
+    # The if condition is met when:
+    # - $realcmd is '$EDITOR'
+    # - $realcmd is "cmd" and $EDITOR is "cmd"
+    # - $realcmd is "cmd" and $EDITOR is "cmd --with --arguments"
+    # - $realcmd is "/path/to/cmd" and $EDITOR is "cmd"
+    # - $realcmd is "/path/to/cmd" and $EDITOR is "/path/to/cmd"
+    # or
+    # - $realcmd is "cmd" and $EDITOR is "cmd"
+    # - $realcmd is "cmd" and $EDITOR is "/path/to/cmd"
+    # or
+    # - $realcmd is "cmd" and $EDITOR is /alternative/path/to/cmd that appears in $PATH
+    if [[ "$realcmd" = (\$EDITOR|$editorcmd|${editorcmd:c}) \
+      || "${realcmd:c}" = ($editorcmd|${editorcmd:c}) ]] \
+      || builtin which -a "$realcmd" | command grep -Fx -q "$editorcmd"; then
+      __sudo-replace-buffer "$cmd" "sudo -e"
+      return
+    fi
+
+    # Check for editor commands in the typed command and replace accordingly
+    case "$BUFFER" in
+      $editorcmd\ *) __sudo-replace-buffer "$editorcmd" "sudo -e" ;;
+      \$EDITOR\ *) __sudo-replace-buffer '$EDITOR' "sudo -e" ;;
+      sudo\ -e\ *) __sudo-replace-buffer "sudo -e" "$EDITOR" ;;
+      sudo\ *) __sudo-replace-buffer "sudo" "" ;;
+      *) LBUFFER="sudo $LBUFFER" ;;
+    esac
+  } always {
+    # Preserve beginning space
+    LBUFFER="${WHITESPACE}${LBUFFER}"
+
+    # Redisplay edit buffer (compatibility with zsh-syntax-highlighting)
+    zle redisplay
+  }
+}
+
 
