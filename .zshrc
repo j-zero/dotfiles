@@ -323,7 +323,7 @@ fi
 ### HELPER FUNCTIONS
 
 directory(){
- echo "%(6~.%-1~/…/%4~.%5~)"
+ echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
 }
 
 toggle_oneline_prompt(){
