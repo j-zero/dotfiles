@@ -13,10 +13,12 @@ ENABLE_PRETTY_PATH_GIT_DIR=1
 
 ENABLE_EXEC_TIME=1
 
+SHOW_EXTENDED_INFO=0
+
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
 
-TWO_LINE_PROMPT_CHAR=
+TWO_LINE_PROMPT_CHAR="➜ "
 ONE_LINE_PROMPT_CHAR="%F{blue}➜%f "
 
 PROMPT_ALTERNATIVE=twoline
@@ -31,12 +33,7 @@ HOME_SYMBOL="~"
 PLUGIN_BASE_DIR="$HOME/.zsh"
 AUTOUPDATE=0
 
-prompt_user="$(whoami)"
-# logo for users
-[[ "$(whoami)" == "ringej" || "$(whoami)" == "johannes" ]] && prompt_user=Ɽ
 
-# Skull emoji for root terminal
-[ "$EUID" -eq 0 ] && prompt_user=💀
 
 [ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
 
@@ -58,8 +55,6 @@ PROMPT_EOL_MARK=""
 
 # timer variable
 elapsed=0
-
-SHOW_INFO=1
 
 # configure key keybindings
 bindkey -e                                        # emacs key bindings
@@ -189,13 +184,13 @@ configure_prompt() {
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $(directory) $ONE_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f  $(directory) $ONE_LINE_PROMPT_CHAR'
           ;;
     esac
-    unset prompt_user
+    #unset prompt_user
 }
 
 TMOUT=1
@@ -373,7 +368,16 @@ fi
 
 
 ### HELPER FUNCTIONS
+user(){
+  prompt_user="$(whoami)"
 
+  # logo for users 
+  [[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
+
+  # Skull emoji for root terminal
+  [ "$EUID" -eq 0 ] && prompt_user=💀
+  echo "%(#.%F{red}.%F{blue})$prompt_user%b%f"
+}
 directory(){
   # shorten after 6 folders
  #echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
@@ -412,10 +416,10 @@ toggle_oneline_prompt(){
 }
 
 toggle_prompt_info(){
-    if [[ $SHOW_INFO -eq 1 ]]; then
-      SHOW_INFO=0
+    if [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
+      SHOW_EXTENDED_INFO=0
     else
-      SHOW_INFO=1
+      SHOW_EXTENDED_INFO=1
     fi
     #configure_prompt
     zle reset-prompt
@@ -432,7 +436,7 @@ toggle_pretty_dir(){
 }
 
 battery_info() {
-    if [[ $SHOW_INFO -eq 1 && $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $SHOW_EXTENDED_INFO -eq 1 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -461,21 +465,21 @@ battery_info() {
     fi
 }
 host_info(){
-  if  [[ $SHOW_INFO -eq 1 ]]; then
+  if  [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
    if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
      echo " %F{blue}@%F{white}%m%f"
    fi
   fi
 }
 function clock(){
-  if [[ $ENABLE_CLOCK -eq 1 ]]; then
+  if [[ $SHOW_EXTENDED_INFO -eq 1 && $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
 
 git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
-  if [[ $SHOW_INFO -eq 1 && $ENABLE_GIT_INFO -eq 1 ]]; then
+  if [[ $ENABLE_GIT_INFO -eq 1 ]]; then
     # Exit if not inside a Git repository
     ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
 
