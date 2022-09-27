@@ -37,6 +37,8 @@ prompt_user="$(whoami)"
 
 [ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
 
+  fpath+=$HOME/.zsh/zsh-completions/src
+
 setopt autocd              # change directory just by typing its name
 #setopt correct            # auto correct mistakes
 setopt interactivecomments # allow comments in interactive mode
@@ -167,7 +169,9 @@ configure_prompt() {
 TMOUT=1
 
 TRAPALRM() {
-    zle reset-prompt
+    if [ "$WIDGET" != "complete-word" ]; then
+        zle reset-prompt
+    fi
 }
 
 
