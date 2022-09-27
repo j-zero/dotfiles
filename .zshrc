@@ -2,13 +2,19 @@
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
 # config
+#
 ENABLE_BATTERY=1
 ENABLE_CLOCK=1
 ENABLE_GIT=1
+
+# always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
 
 TWO_LINE_PROMPT_CHAR=
-ONE_LINE_PROMPT_CHAR="➜ "
+ONE_LINE_PROMPT_CHAR="%F{blue}➜%f "
+
+PROMPT_ALTERNATIVE=twoline
+NEWLINE_BEFORE_PROMPT=yes
 
 prompt_user="$(whoami)"
 # logo for users
@@ -34,6 +40,8 @@ PROMPT_EOL_MARK=""
 # timer variable
 elapsed=0
 
+SHOW_INFO=1
+
 # configure key keybindings
 bindkey -e                                        # emacs key bindings
 bindkey ' ' magic-space                           # do history expansion on space
@@ -56,6 +64,9 @@ bindkey -M viins '\e\e' sudo-command-line
 
 zle -N toggle_oneline_prompt
 bindkey ^P toggle_oneline_prompt
+
+zle -N toggle_prompt_info
+bindkey ^H toggle_prompt_info
 
 # enable completion features
 autoload -Uz compinit
@@ -94,9 +105,9 @@ TIMEFMT=$'\nreal\t%E\nuser\t%U\nsys\t%S\ncpu\t%P'
 #[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # set variable identifying the chroot you work in (used in the prompt below)
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-    debian_chroot=$(cat /etc/debian_chroot)
-fi
+#if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+#    debian_chroot=$(cat /etc/debian_chroot)
+#fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
@@ -126,11 +137,10 @@ configure_prompt() {
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(6~.%-1~/…/%4~.%5~)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory)\n%F{%(#.red.green)}└─%(#.%F{red}.%F{blue})'$prompt_user'%b%f $TWO_LINE_PROMPT_CHAR'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(6~.%-1~/…/%4~.%5~) %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $ONE_LINE_PROMPT_CHAR'
-        #PROMPT=$'%F{%(#.red.blue)}'$prompt_user':%B%F{%(#.blue.green)}%~%b%f$(git_info) %(#.%F{red}#.%F{blue}$)%f '
+        PROMPT=$'%F{%(#.red.green)}[ $(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f %(#.%F{red}$prompt_user.%F{blue}$prompt_user)%b%f $(directory) $ONE_LINE_PROMPT_CHAR'
           ;;
     esac
     unset prompt_symbol
@@ -142,12 +152,6 @@ TRAPALRM() {
     zle reset-prompt
 }
 
-# The following block is surrounded by two delimiters.
-# These delimiters must not be modified. Thanks.
-# START KALI CONFIG VARIABLES
-PROMPT_ALTERNATIVE=twoline
-NEWLINE_BEFORE_PROMPT=yes
-# STOP KALI CONFIG VARIABLES
 
 if [ "$color_prompt" = yes ]; then
     # override default virtualenv indicator in prompt
@@ -309,6 +313,11 @@ fi
 
 
 ### HELPER FUNCTIONS
+
+directory(){
+ echo "%(6~.%-1~/…/%4~.%5~)"
+}
+
 toggle_oneline_prompt(){
     if [ "$PROMPT_ALTERNATIVE" = oneline ]; then
         PROMPT_ALTERNATIVE=twoline
@@ -319,8 +328,18 @@ toggle_oneline_prompt(){
     zle reset-prompt
 }
 
+toggle_prompt_info(){
+    if [[ $SHOW_INFO -eq 1 ]]; then
+      SHOW_INFO=0
+    else
+      SHOW_INFO=1
+    fi
+    #configure_prompt
+    zle reset-prompt
+}
+
 battery_info() {
-    if [[ $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $SHOW_INFO -eq 1 && $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -339,15 +358,15 @@ battery_info() {
         BAT_STATE_STR="🔋%F{$battery_color}$battery_percent%f%%"
       fi
       echo "%F{237} | %f$BAT_STATE_STR%f"
+
     fi
 }
 host_info(){
-  local p_host=""
-  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
-    #p_host="%F{%(#.red.green)}[%f%F{blue}@%F{white}%m%F{%(#.red.green)}]%f "
-    p_host="%F{237} | %F{blue}@%F{white}%m%f"
+  if  [[ $SHOW_INFO -eq 1 ]]; then
+   if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
+     echo "%F{237} | %F{blue}@%F{white}%m%f"
+   fi
   fi
-  echo $p_host
 }
 function clock(){
   if [[ $ENABLE_CLOCK -eq 1 ]]; then
@@ -357,7 +376,7 @@ function clock(){
 
 git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
-  if [[ $ENABLE_GIT -eq 1 ]]; then
+  if [[ $SHOW_INFO -eq 1 && $ENABLE_GIT -eq 1 ]]; then
     # Exit if not inside a Git repository
     ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
 
