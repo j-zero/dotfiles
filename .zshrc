@@ -169,7 +169,8 @@ configure_prompt() {
 TMOUT=1
 
 TRAPALRM() {
-    if [ "$WIDGET" != "complete-word" ]; then
+    #if [ "$WIDGET" != "complete-word" ]; then
+    if ! [[ "$WIDGET" =~ ^(complete-word|fzf-completion)$  ]]; then
         zle reset-prompt
     fi
 }
