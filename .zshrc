@@ -1,6 +1,11 @@
 # ~/.zshrc file for zsh interactive shells.
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
+# config
+ENABLE_BATTERY=0
+ENABLE_CLOCK=1
+
+
 # Kali default icon
 #prompt_user=㉿
 prompt_user="$(whoami)"
@@ -9,11 +14,6 @@ elapsed=0
 
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
-
-
-
-autoload -Uz vcs_info
-
 
 setopt autocd              # change directory just by typing its name
 #setopt correct            # auto correct mistakes
@@ -24,6 +24,7 @@ setopt notify              # report the status of background jobs immediately
 setopt numericglobsort     # sort filenames numerically when it makes sense
 setopt promptsubst         # enable command substitution in prompt
 
+autoload -Uz vcs_info
 WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
 
 # hide EOL sign ('%')
@@ -117,13 +118,12 @@ fi
 
 configure_prompt() {
 
+  # Right-side prompt with exit codes and background processes
   RPROMPT=$'%(?.%F{green}✓%F{reset}. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.) %F{cyan}$(echo $elapsed)%fms'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-          #PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[%F{reset}%D{%H:%M:%S}%F{%(#.red.green)}] $(prompt_host)$(bat_state) %b%F{%(#.red.green)}[%B%f%(6~.%-1~/…/%4~.%5~)%b%F{%(#.red.green)}] ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
-          PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[ %F{reset}%D{%H:%M:%S}%F{237} | %f$(bat_state)%F{%(#.red.green)} ]%f$(prompt_host) %(6~.%-1~/…/%4~.%5~) ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
-          # Right-side prompt with exit codes and background processes
+          PROMPT=$'%F{%(#.red.green)}┌─${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}%B%F{%(#.red.blue)}'$'%b%F{%(#.red.green)}[ %f%D{%H:%M:%S}$(bat_state)%F{%(#.red.green)} ]%f$(prompt_host) %(6~.%-1~/…/%4~.%5~) ${vcs_info_msg_0_}\n%F{%(#.red.green)}└─%B%(#.%F{red}'$prompt_user'.%F{blue}'$prompt_user')%b%F{reset} '
 
           ;;
       oneline)
@@ -311,7 +311,7 @@ fi
 if command -v batcat &> /dev/null; then
   alias less='batcat'
   alias more='batcat'
-  alias cat='batcat --paging=never' 
+  alias cat='batcat --paging=never'
 fi
 
 
@@ -344,15 +344,16 @@ function bat_percent() {
     echo "%F{$battery_color}$battery_percent%f"
 }
 function bat_state() {
-    local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
+    if [[ $ENABLE_BATTERY -eq 1 ]]; then
+      local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
 
-    if [ $battery_state == "charging" ]; then
-      BAT_STATE_STR="🔌$(bat_percent)%%"
-    else
-      BAT_STATE_STR="🔋$(bat_percent)%%"
+      if [ $battery_state == "charging" ]; then
+        BAT_STATE_STR="🔌$(bat_percent)%%"
+      else
+        BAT_STATE_STR="🔋$(bat_percent)%%"
+      fi
+      echo "%F{237} | %f$BAT_STATE_STR%f"
     fi
-    #echo "%F{%(#.red.green)}[%f$BAT_STATE_STR%F{%(#.red.green)}]%f"
-    echo "$BAT_STATE_STR"
 }
 function prompt_host(){
   local p_host=""
@@ -361,5 +362,10 @@ function prompt_host(){
     p_host="%F{blue}@%F{white}%m%f "
   fi
   echo $p_host
+}
+function clock(){
+  if [[ $ENABLE_CLOCK -eq 1 ]]; then
+    echo "%f%D{%H:%M:%S}"
+  fi
 }
 
