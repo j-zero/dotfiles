@@ -472,7 +472,7 @@ host_info(){
   fi
 }
 function clock(){
-  if [[ $SHOW_EXTENDED_INFO -eq 1 && $ENABLE_CLOCK -eq 1 ]]; then
+  if [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
