@@ -289,6 +289,12 @@ if command -v exa &> /dev/null; then
 fi
 
 
+if command -v bat &> /dev/null; then
+  alias less='bat'
+  alias more='bat'
+  alias cat='bat --paging=never'
+fi
+# Kali
 if command -v batcat &> /dev/null; then
   alias less='batcat'
   alias more='batcat'
