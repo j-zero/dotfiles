@@ -28,6 +28,9 @@ MAX_FOLDER_DEPTH=255
 #HOME_SYMBOL=🏠
 HOME_SYMBOL="~"
 
+PLUGIN_BASE_DIR="$HOME/.zsh"
+AUTOUPDATE=0
+
 prompt_user="$(whoami)"
 # logo for users
 [[ "$(whoami)" == "ringej" || "$(whoami)" == "johannes" ]] && prompt_user=Ɽ
@@ -37,7 +40,7 @@ prompt_user="$(whoami)"
 
 [ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
 
-  fpath+=$HOME/.zsh/zsh-completions/src
+fpath+=$HOME/.zsh/zsh-completions/src
 
 setopt autocd              # change directory just by typing its name
 #setopt correct            # auto correct mistakes
@@ -87,6 +90,35 @@ bindkey ^H toggle_prompt_info
 zle -N toggle_pretty_dir
 bindkey ^G toggle_pretty_dir
 
+mkdir -p ~/.zsh/ > /dev/null 2>&1
+
+git_include(){
+  mkdir -p "$PLUGIN_BASE_DIR" > /dev/null 2>&1
+  GIT_URL=$1
+  FOLDER=$2
+  SCRIPT=$3
+  EXECUTE_FILE="$PLUGIN_BASE_DIR/$FOLDER/$SCRIPT"
+  if [ -f "$EXECUTE_FILE" ]; then
+    [[ $AUTOUPDATE -eq 1 ]] && echo "Updating $FOLDER" && git -C "$PLUGIN_BASE_DIR/$FOLDER" pull
+  else
+    git clone "$GIT_URL" "$PLUGIN_BASE_DIR/$FOLDER"
+  fi
+  if [ ! -z $SCRIPT ]; then
+    source "$EXECUTE_FILE"
+  fi
+}
+
+
+# Plugins
+
+if command -v fzf &> /dev/null; then
+  git_include "https://github.com/Aloxaf/fzf-tab" "fzf-tab" "fzf-tab.plugin.zsh"
+  git_include "https://github.com/unixorn/fzf-zsh-plugin.git" "fzf-zsh-plugin" "fzf-zsh-plugin.plugin.zsh"
+fi
+
+git_include "https://github.com/zsh-users/zsh-syntax-highlighting.git" "zsh-syntax-highlighting" "zsh-syntax-highlighting.zsh"
+git_include "https://github.com/zsh-users/zsh-autosuggestions" "zsh-autosuggestions" "zsh-autosuggestions.zsh"
+git_include "https://github.com/zsh-users/zsh-completions.git" "zsh-completions" ""
 
 # enable completion features
 autoload -Uz compinit
@@ -169,8 +201,9 @@ configure_prompt() {
 TMOUT=1
 
 TRAPALRM() {
+    #echo "\n\nDEBUG: $WIDGET\n\n"
     #if [ "$WIDGET" != "complete-word" ]; then
-    if ! [[ "$WIDGET" =~ ^(complete-word|fzf-completion)$  ]]; then
+    if ! [[ "$WIDGET" =~ ^(complete-word|fzf-completion|fzf-tab-complete|fzf-history-widget)$  ]]; then
         zle reset-prompt
     fi
 }
@@ -183,56 +216,51 @@ if [ "$color_prompt" = yes ]; then
     configure_prompt
 
     # enable syntax-highlighting
-    if [ -f "$HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-        . "$HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-        ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
-        ZSH_HIGHLIGHT_STYLES[default]=none
-        ZSH_HIGHLIGHT_STYLES[unknown-token]=fg=white,underline
-        ZSH_HIGHLIGHT_STYLES[reserved-word]=fg=cyan,bold
-        ZSH_HIGHLIGHT_STYLES[suffix-alias]=fg=green,underline
-        ZSH_HIGHLIGHT_STYLES[global-alias]=fg=green,bold
-        ZSH_HIGHLIGHT_STYLES[precommand]=fg=green,underline
-        ZSH_HIGHLIGHT_STYLES[commandseparator]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[autodirectory]=fg=green,underline
-        ZSH_HIGHLIGHT_STYLES[path]=bold
-        ZSH_HIGHLIGHT_STYLES[path_pathseparator]=
-        ZSH_HIGHLIGHT_STYLES[path_prefix_pathseparator]=
-        ZSH_HIGHLIGHT_STYLES[globbing]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[history-expansion]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[command-substitution]=none
-        ZSH_HIGHLIGHT_STYLES[command-substitution-delimiter]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[process-substitution]=none
-        ZSH_HIGHLIGHT_STYLES[process-substitution-delimiter]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[single-hyphen-option]=fg=green
-        ZSH_HIGHLIGHT_STYLES[double-hyphen-option]=fg=green
-        ZSH_HIGHLIGHT_STYLES[back-quoted-argument]=none
-        ZSH_HIGHLIGHT_STYLES[back-quoted-argument-delimiter]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[single-quoted-argument]=fg=yellow
-        ZSH_HIGHLIGHT_STYLES[double-quoted-argument]=fg=yellow
-        ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]=fg=yellow
-        ZSH_HIGHLIGHT_STYLES[rc-quote]=fg=magenta
-        ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[back-dollar-quoted-argument]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[assign]=none
-        ZSH_HIGHLIGHT_STYLES[redirection]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[comment]=fg=black,bold
-        ZSH_HIGHLIGHT_STYLES[named-fd]=none
-        ZSH_HIGHLIGHT_STYLES[numeric-fd]=none
-        ZSH_HIGHLIGHT_STYLES[arg0]=fg=cyan
-        ZSH_HIGHLIGHT_STYLES[bracket-error]=fg=red,bold
-        ZSH_HIGHLIGHT_STYLES[bracket-level-1]=fg=blue,bold
-        ZSH_HIGHLIGHT_STYLES[bracket-level-2]=fg=green,bold
-        ZSH_HIGHLIGHT_STYLES[bracket-level-3]=fg=magenta,bold
-        ZSH_HIGHLIGHT_STYLES[bracket-level-4]=fg=yellow,bold
-        ZSH_HIGHLIGHT_STYLES[bracket-level-5]=fg=cyan,bold
-        ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]=standout
-    fi
-    if [ -f "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-        . "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
-    fi
+    #ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
+    ZSH_HIGHLIGHT_STYLES[default]=none
+    ZSH_HIGHLIGHT_STYLES[unknown-token]=fg=white,underline
+    ZSH_HIGHLIGHT_STYLES[reserved-word]=fg=cyan,bold
+    ZSH_HIGHLIGHT_STYLES[suffix-alias]=fg=green,underline
+    ZSH_HIGHLIGHT_STYLES[global-alias]=fg=green,bold
+    ZSH_HIGHLIGHT_STYLES[precommand]=fg=green,underline
+    ZSH_HIGHLIGHT_STYLES[commandseparator]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[autodirectory]=fg=green,underline
+    ZSH_HIGHLIGHT_STYLES[path]=bold
+    ZSH_HIGHLIGHT_STYLES[path_pathseparator]=
+    ZSH_HIGHLIGHT_STYLES[path_prefix_pathseparator]=
+    ZSH_HIGHLIGHT_STYLES[globbing]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[history-expansion]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[command-substitution]=none
+    ZSH_HIGHLIGHT_STYLES[command-substitution-delimiter]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[process-substitution]=none
+    ZSH_HIGHLIGHT_STYLES[process-substitution-delimiter]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[single-hyphen-option]=fg=green
+    ZSH_HIGHLIGHT_STYLES[double-hyphen-option]=fg=green
+    ZSH_HIGHLIGHT_STYLES[back-quoted-argument]=none
+    ZSH_HIGHLIGHT_STYLES[back-quoted-argument-delimiter]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[single-quoted-argument]=fg=yellow
+    ZSH_HIGHLIGHT_STYLES[double-quoted-argument]=fg=yellow
+    ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]=fg=yellow
+    ZSH_HIGHLIGHT_STYLES[rc-quote]=fg=magenta
+    ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[back-dollar-quoted-argument]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[assign]=none
+    ZSH_HIGHLIGHT_STYLES[redirection]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[comment]=fg=black,bold
+    ZSH_HIGHLIGHT_STYLES[named-fd]=none
+    ZSH_HIGHLIGHT_STYLES[numeric-fd]=none
+    ZSH_HIGHLIGHT_STYLES[arg0]=fg=cyan
+    ZSH_HIGHLIGHT_STYLES[bracket-error]=fg=red,bold
+    ZSH_HIGHLIGHT_STYLES[bracket-level-1]=fg=blue,bold
+    ZSH_HIGHLIGHT_STYLES[bracket-level-2]=fg=green,bold
+    ZSH_HIGHLIGHT_STYLES[bracket-level-3]=fg=magenta,bold
+    ZSH_HIGHLIGHT_STYLES[bracket-level-4]=fg=yellow,bold
+    ZSH_HIGHLIGHT_STYLES[bracket-level-5]=fg=cyan,bold
+    ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]=standout
+
 else
-    PROMPT='${debian_chroot:+($debian_chroot)}%n@%m:%~%(#.#.$) '
+    PROMPT='%n@%m:%~%(#.#.$) '
 fi
 unset color_prompt force_color_prompt
 
@@ -246,7 +274,7 @@ xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
     ;;
 esac
 
-function preexec() {
+preexec() {
   # exec timer
   timer=$(($(date +%s%0N)/1000000))
 }
@@ -630,7 +658,7 @@ function get_pretty_path(){
     local counter=0
     local is_named_folder=0
     local depth=${#${PWD//[!\/]}} # path depth
-    
+
     if [[ $is_in_git -eq 1 && $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
       get_rel_git_path
       return
@@ -685,5 +713,6 @@ function get_pretty_path(){
     [[ "$is_named_folder" -eq 0 ]] && echo -n "$DIR_CHAR"
     echo "$result"
 }
+
 
 

@@ -7,9 +7,11 @@ cp -v ~/.zshrc ~/.zshrc.datenpirat.bak
 cp -v ~/.vimrc ~/.vimrc.datenpirat.bak
 cp -v .config/terminator/config ~/.config/terminator/config.datenpirat.bak
 #cp -v -r ./.zsh ~/.zsh
-git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
-git clone https://github.com/zsh-users/zsh-completions ~/.zsh/zsh-completions
+#git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+#git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
+#git clone https://github.com/zsh-users/zsh-completions ~/.zsh/zsh-completions
+#git clone https://github.com/Aloxaf/fzf-tab ~/.zsh/fzf-tab
+#git clone https://github.com/unixorn/fzf-zsh-plugin.git ~/.zsh/fzf-zsh-plugin
 
 
 # Install
