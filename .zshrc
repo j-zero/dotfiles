@@ -468,7 +468,7 @@ toggle_oneline_prompt(){
 __toggle_info_level(){
 
     ((_THEME_INFO_LEVEL++))
-    if [[ $_THEME_INFO_LEVEL -gt 4 ]]; then
+    if [[ $_THEME_INFO_LEVEL -gt 5 ]]; then
       _THEME_INFO_LEVEL=0
     fi
     #echo "\nDEBUG: info level = $_THEME_INFO_LEVEL\n"
@@ -501,7 +501,7 @@ toggle_pretty_dir(){
 
 _theme_battery_info() {
   if command -v upower &> /dev/null; then
-    if [[ $_THEME_INFO_LEVEL -ge 4 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $_THEME_INFO_LEVEL -ge 5 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -540,7 +540,7 @@ _theme_host_info(){
     fi
 }
 _theme_clock(){
-  if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 4 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
@@ -558,7 +558,7 @@ _theme_git_info() {
     GIT_INFO+=( " %F{240} $GIT_LOCATION" )
 
       #[ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
-    if [[ $ENABLE_GIT_INFO_EXTRA -eq 1 ]]; then
+    if if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_GIT_INFO_EXTRA -eq 1 ]]; then
 
       local GIT_UNTRACKED=$(git ls-files --others | wc -l)
       local GIT_MODIFIED=$(git diff --numstat | wc -l)
