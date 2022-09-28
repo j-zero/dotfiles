@@ -18,6 +18,7 @@ SHOW_EXTENDED_INFO=1
 
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
+AUTO_SSH_HOST=1
 
 
 TWO_LINE_PROMPT_CHAR="➜ "
@@ -284,11 +285,18 @@ unset color_prompt force_color_prompt
 #*)
 #    ;;prompt_user
 #esac
+
+if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
+  SHOW_HOST_INFO=$AUTO_SSH_HOST
+  if [[ ENABLE_HOST_ALWAYS -eq 1 ]]; then
+    SHOW_HOST_INFO=1
+  fi
+fi
+
 set_term_title(){
-  if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
+   if [[ SHOW_HOST_INFO -eq 1 ]]; then
     #echo "SSH!"
     TERM_TITLE=$'\e]0;$prompt_user@%m: $current_pretty_dir\a'
-    SHOW_HOST_INFO=1
   else
     TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
   fi
