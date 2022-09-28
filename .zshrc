@@ -285,9 +285,10 @@ unset color_prompt force_color_prompt
 #    ;;prompt_user
 #esac
 set_term_title(){
-  if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]] || [[ $SHOW_HOST_INFO -eq 1 ]]; then
+  if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
     #echo "SSH!"
     TERM_TITLE=$'\e]0;$prompt_user@%m: $current_pretty_dir\a'
+    SHOW_HOST_INFO=1
   else
     TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
   fi
