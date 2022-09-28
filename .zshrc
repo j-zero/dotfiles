@@ -104,6 +104,8 @@ bindkey ^G toggle_pretty_dir
 
 mkdir -p ~/.zsh/ > /dev/null 2>&1
 
+ZSH_DISABLE_COMPFIX="true"
+
 git_include(){
   mkdir -p "$PLUGIN_BASE_DIR" > /dev/null 2>&1
   GIT_URL=$1
