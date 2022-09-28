@@ -213,10 +213,11 @@ configure_prompt() {
 TMOUT=1
 
 TRAPALRM() {
-    echo "\n\nDEBUG: $WIDGET\n\n"
+    echo "\n\nDEBUG: \"$WIDGET\"\n\n"
     #if [ "$WIDGET" != "complete-word" ]; then
     if ! [[ "$WIDGET" =~ ^(complete-word|fzf-completion|fzf-tab-complete|fzf-history-widget)$  ]]; then
         zle reset-prompt
+        echo "\n\nDEBUG: reset-prompt\n\n"
     fi
 }
 
