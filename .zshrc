@@ -710,7 +710,7 @@ sudo-command-line() {
     zle redisplay
   }
 }
-get_rel_git_path(){
+_theme_get_rel_git_path(){
     local targetFolder=$(git rev-parse --show-toplevel)
     local git_workdir=$(basename $targetFolder)
     local currentFolder=$(pwd)
@@ -744,7 +744,7 @@ get_pretty_path(){
     local depth=${#${PWD//[!\/]}} # path depth
 
     if [[ $is_in_git -eq 1 && $ENABLE_PRETTY_PATH_GIT_DIR -eq 1 ]]; then
-      get_rel_git_path
+      _theme_get_rel_git_path
       return
     fi
 
