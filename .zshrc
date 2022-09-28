@@ -297,8 +297,8 @@ if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]];
 fi
 
 _theme_set_term_title(){
-  local str_ready=" ⧗"
-  [ $_THEME_READY -eq 1 ] && str_ready=" ✔"
+  local str_ready=
+  [ $_THEME_READY -eq 0 ] && str_ready=" ⧗"
 
   if [[ SHOW_HOST_INFO -eq 1 ]]; then
     #echo "SSH!"
