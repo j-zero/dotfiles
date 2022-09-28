@@ -433,7 +433,7 @@ _theme_directory(){
  #echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
  #get_pretty_path
   if [[ $ENABLE_PRETTY_PATH -eq 1 ]]; then
-    get_pretty_path;
+    _theme_get_pretty_path;
   else
     echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
   fi
@@ -732,7 +732,7 @@ _theme_get_rel_git_path(){
     #current_pretty_dir="%F{240}%F{cyan}$git_workdir%f$DIR_CHAR$result"
     echo $current_pretty_dir
 }
-get_pretty_path(){
+_theme_get_pretty_path(){
 
     # git stuff
     local git_dir=
