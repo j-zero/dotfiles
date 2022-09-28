@@ -7,7 +7,7 @@ ENABLE_BATTERY=1
 ENABLE_BATTERY_ON_CHARGE=1
 ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
-ENABLE_GIT_INFO_EXTRA=0
+ENABLE_GIT_INFO_EXTRA=1
 
 ENABLE_PRETTY_PATH=1
 ENABLE_PRETTY_PATH_GIT_DIR=1
@@ -202,7 +202,7 @@ configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
   
-  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
+  RPROMPT=$'%(?.%F{154}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
@@ -554,56 +554,54 @@ _theme_git_info() {
     # Git branch/tag, or name-rev if on detached head
     local GIT_LOCATION=${$(git symbolic-ref -q HEAD || git name-rev --name-only --no-undefined --always HEAD)#(refs/heads/|tags/)}
 
-
-
-
     local -a GIT_INFO
     GIT_INFO+=( " %F{240} $GIT_LOCATION" )
+
       #[ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
     if [[ $ENABLE_GIT_INFO_EXTRA -eq 1 ]]; then
 
-    local GIT_UNTRACKED=$(git ls-files --others | wc -l)
-    local GIT_MODIFIED=$(git diff --numstat | wc -l)
-    local GIT_STAGED=$(git diff --cached --numstat | wc -l)
-    local AHEAD="%F{red}↑NUM%f"
-    local BEHIND="%F{green}↓NUM%f"
-    local MERGING="%F{magenta}⚡︎%f"
-    local UNTRACKED="%F{red}$GIT_UNTRACKED%f"
-    local MODIFIED="%F{yellow}$GIT_MODIFIED%f"
-    local STAGED="%F{cyan}$GIT_STAGED%f"
+      local GIT_UNTRACKED=$(git ls-files --others | wc -l)
+      local GIT_MODIFIED=$(git diff --numstat | wc -l)
+      local GIT_STAGED=$(git diff --cached --numstat | wc -l)
+      local AHEAD="%F{162}↑NUM%f"
+      local BEHIND="%F{226}↓NUM%f"
+      local MERGING="%F{magenta}⚡︎%f"
+      local UNTRACKED="%F{red}${GIT_UNTRACKED}%f"
+      local MODIFIED="%F{yellow}${GIT_MODIFIED}%f"
+      local STAGED="%F{154}${GIT_STAGED}%f"
 
-    local -a DIVERGENCES
-    local -a FLAGS
+      local -a DIVERGENCES
+      local -a FLAGS
 
-    local NUM_AHEAD="$(git log --oneline @{u}.. 2> /dev/null | wc -l | tr -d ' ')"
-    if [ "$NUM_AHEAD" -gt 0 ]; then
-      DIVERGENCES+=( "${AHEAD//NUM/$NUM_AHEAD}" )
-    fi
+      local NUM_AHEAD="$(git log --oneline @{u}.. 2> /dev/null | wc -l | tr -d ' ')"
+      if [ "$NUM_AHEAD" -gt 0 ]; then
+        DIVERGENCES+=( "${AHEAD//NUM/$NUM_AHEAD}" )
+      fi
 
-    local NUM_BEHIND="$(git log --oneline ..@{u} 2> /dev/null | wc -l | tr -d ' ')"
-    if [ "$NUM_BEHIND" -gt 0 ]; then
-      DIVERGENCES+=( "${BEHIND//NUM/$NUM_BEHIND}" )
-    fi
+      local NUM_BEHIND="$(git log --oneline ..@{u} 2> /dev/null | wc -l | tr -d ' ')"
+      if [ "$NUM_BEHIND" -gt 0 ]; then
+        DIVERGENCES+=( "${BEHIND//NUM/$NUM_BEHIND}" )
+      fi
 
-    local GIT_DIR="$(git rev-parse --git-dir 2> /dev/null)"
-    if [ -n $GIT_DIR ] && test -r $GIT_DIR/MERGE_HEAD; then
-      FLAGS+=( "$MERGING" )
-    fi
+      local GIT_DIR="$(git rev-parse --git-dir 2> /dev/null)"
+      if [ -n $GIT_DIR ] && test -r $GIT_DIR/MERGE_HEAD; then
+        FLAGS+=( "$MERGING" )
+      fi
 
-    if [[ -n $(git ls-files --other --exclude-standard 2> /dev/null) ]]; then
-      FLAGS+=( "$UNTRACKED" )
-    fi
+      if [[ -n $(git ls-files --other --exclude-standard 2> /dev/null) ]]; then
+        FLAGS+=( "$UNTRACKED" )
+      fi
 
-    if ! git diff --quiet 2> /dev/null; then
-      FLAGS+=( "$MODIFIED" )
-    fi
+      if ! git diff --quiet 2> /dev/null; then
+        FLAGS+=( "$MODIFIED" )
+      fi
 
-    if ! git diff --cached --quiet 2> /dev/null; then
-      FLAGS+=( "$STAGED" )
-    fi
+      if ! git diff --cached --quiet 2> /dev/null; then
+        FLAGS+=( "$STAGED" )
+      fi
 
       [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
-      [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j: :)FLAGS}" )
+      [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "%F{240}| %f${(j: :)FLAGS}" )
     fi
     #GIT_INFO+=( "" )
     echo "${(j: :)GIT_INFO}%f"
