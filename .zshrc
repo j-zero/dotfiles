@@ -205,10 +205,10 @@ configure_prompt() {
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(_theme_user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}[ $(_theme_user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
           ;;
     esac
     #unset prompt_user
@@ -399,6 +399,15 @@ fi
 
 alias commit="git commit -a -m"
 alias todo="grep 'TODO\:\|REVIEW\:\|BUG\:\|NOTE\:\|FIXME\:\|XXX\:\|HACK\:\|UX\:' * -nri"
+
+open(){
+  if [[ -z "$@" ]]; then
+    xdg-open .
+  else
+    xdg-open "$@"
+  fi
+}
+
 #alias cdg="! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && cd $(git rev-parse --show-toplevel)"
 
 # enable auto-suggestions based on the history
@@ -415,7 +424,7 @@ fi
 
 
 ### HELPER FUNCTIONS
-user(){
+_theme_user(){
   echo "%(#.%F{red}.%F{blue})$prompt_user%b%f"
 }
 directory(){
