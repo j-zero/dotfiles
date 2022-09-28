@@ -1,7 +1,7 @@
 # ~/.zshrc file for zsh interactive shells.
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
-# config
+# config_THEME_INFO_LEVEL
 #
 ENABLE_BATTERY=1
 ENABLE_BATTERY_ON_CHARGE=1
@@ -13,8 +13,7 @@ ENABLE_PRETTY_PATH_GIT_DIR=1
 
 ENABLE_EXEC_TIME=1
 
-SHOW_EXTENDED_INFO=1
-
+_THEME_INFO_LEVEL=1
 
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
@@ -62,6 +61,8 @@ PROMPT_EOL_MARK=""
 # timer variable
 elapsed=0
 
+_THEME_READY=1
+
 prompt_user="$(whoami)"
 # logo for users 
 [[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
@@ -93,8 +94,8 @@ bindkey -M viins '\e\e' sudo-command-line
 zle -N toggle_oneline_prompt
 bindkey ^P toggle_oneline_prompt
 
-zle -N toggle_extended_info
-bindkey ^J toggle_extended_info
+zle -N __toggle_info_level
+bindkey ^J __toggle_info_level
 
 zle -N toggle_host_info
 bindkey ^H toggle_host_info
@@ -221,6 +222,9 @@ TRAPALRM() {
         zle reset-prompt
         #echo "\n\nDEBUG: \"$WIDGET\": reset-prompt\n\n"
     fi
+    if [[ "$WIDGET" == "accept-line" ]]; then
+
+    fi
 }
 
 
@@ -301,12 +305,16 @@ if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]];
 fi
 
 set_term_title(){
-   if [[ SHOW_HOST_INFO -eq 1 ]]; then
+  local str_ready=" ⧗"
+  [ $_THEME_READY -eq 1 ] && str_ready=" ✔"
+
+  if [[ SHOW_HOST_INFO -eq 1 ]]; then
     #echo "SSH!"
-    TERM_TITLE=$'\e]0;$prompt_user@%m: $current_pretty_dir\a'
+    TERM_TITLE=$'\e]0;$prompt_user@%m: $current_pretty_dir$str_ready\a'
   else
-    TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
+    TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir$str_ready\a'
   fi
+
   print -Pnr -- "$TERM_TITLE"
 }
 set_term_title
@@ -314,6 +322,8 @@ set_term_title
 preexec() {
   # exec timer
   timer=$(($(date +%s%0N)/1000000))
+  _THEME_READY=0
+  set_term_title
 }
 
 precmd() {
@@ -332,11 +342,13 @@ precmd() {
 
     # exec timer
     if [ $timer ]; then
-    now=$(($(date +%s%0N)/1000000))
-    elapsed=$(($now-$timer))
+      now=$(($(date +%s%0N)/1000000))
+      elapsed=$(($now-$timer))
 
-    unset timer
-  fi
+      unset timer
+    fi
+    _THEME_READY=1
+     set_term_title
 }
 
 # enable color support of ls, less and man, and also add handy aliases
@@ -452,14 +464,21 @@ toggle_oneline_prompt(){
     zle reset-prompt
 }
 
-toggle_extended_info(){
-    if [[ $SHOW_EXTENDED_INFO -eq 0 ]]; then
-      SHOW_EXTENDED_INFO=1
-    elif [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
-       SHOW_EXTENDED_INFO=2
-    else
-      SHOW_EXTENDED_INFO=0
+__toggle_info_level(){
+
+    ((_THEME_INFO_LEVEL++))
+    if [[ $_THEME_INFO_LEVEL -gt 3 ]]; then
+      _THEME_INFO_LEVEL=0
     fi
+
+    #  _THEME_INFO_LEVEL=1
+    #elif [[ $_THEME_INFO_LEVEL -eq 1 ]]; then
+    #   _THEME_INFO_LEVEL=2
+    #elif [[ $_THEME_INFO_LEVEL -eq 2 ]]; then
+    #   _THEME_INFO_LEVEL=3
+    #else
+    #  _THEME_INFO_LEVEL=0
+    #fi
     #configure_prompt
     zle reset-prompt
 }
@@ -488,7 +507,7 @@ toggle_pretty_dir(){
 
 battery_info() {
   if command -v upower &> /dev/null; then
-    if [[ $SHOW_EXTENDED_INFO -ge 2 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -527,14 +546,14 @@ host_info(){
     fi
 }
 clock(){
-  if [[ $SHOW_EXTENDED_INFO -ge 1 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 2 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
 
 git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
-  if [[ $ENABLE_GIT_INFO -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 1 ]] && [[ $ENABLE_GIT_INFO -eq 1 ]]; then
     # Exit if not inside a Git repository
     ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
 
