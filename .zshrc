@@ -10,7 +10,7 @@ ENABLE_GIT_INFO=1
 ENABLE_GIT_INFO_EXTRA=1
 
 ENABLE_PRETTY_PATH=1
-ENABLE_PRETTY_PATH_GIT_DIR=1
+ENABLE_PRETTY_PATH_GIT_DIR=0
 
 ENABLE_EXEC_TIME=1
 
@@ -601,7 +601,7 @@ _theme_git_info() {
       fi
 
       [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
-      [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "%F{240}| %f${(j: :)FLAGS}" )
+      [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j: :)FLAGS}" )
     fi
     #GIT_INFO+=( "" )
     echo "${(j: :)GIT_INFO}%f"
