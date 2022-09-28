@@ -518,7 +518,7 @@ battery_info() {
 host_info(){
     if [[ $SHOW_HOST_INFO -eq 1 ]]; then
       if [[ $IS_REMOTE_HOST -eq 1 ]]; then
-        echo "%F{237}@%F{green}%m%f"
+        echo "%F{237}@%F{yellow}%m%f"
       else
         echo "%F{237}@%F{white}%m%f"
       fi
