@@ -7,6 +7,7 @@ ENABLE_BATTERY=1
 ENABLE_BATTERY_ON_CHARGE=1
 ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
+ENABLE_GIT_INFO_EXTRA=0
 
 ENABLE_PRETTY_PATH=1
 ENABLE_PRETTY_PATH_GIT_DIR=1
@@ -201,14 +202,14 @@ configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
   
-  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(exec_time)'
+  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(_theme_user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)} ]%f $(_theme_directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(_theme_user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}[ $(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)} ]%f $(_theme_directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
           ;;
     esac
     #unset prompt_user
@@ -295,7 +296,7 @@ if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]];
   fi
 fi
 
-set_term_title(){
+_theme_set_term_title(){
   local str_ready=" ⧗"
   [ $_THEME_READY -eq 1 ] && str_ready=" ✔"
 
@@ -308,18 +309,18 @@ set_term_title(){
 
   print -Pnr -- "$TERM_TITLE"
 }
-set_term_title
+_theme_set_term_title
 
 preexec() {
   # exec timer
   timer=$(($(date +%s%0N)/1000000))
   _THEME_READY=0
-  set_term_title
+  _theme_set_term_title
 }
 
 precmd() {
     # Print the previously configured title
-    set_term_title
+    _theme_set_term_title
     #print -Pnr -- "$TERM_TITLE"
 
     # Print a new line before the prompt, but only if it is not the first line
@@ -339,7 +340,7 @@ precmd() {
       unset timer
     fi
     _THEME_READY=1
-     set_term_title
+    _theme_set_term_title
 }
 
 # enable color support of ls, less and man, and also add handy aliases
@@ -427,7 +428,7 @@ fi
 _theme_user(){
   echo "%(#.%F{red}.%F{blue})$prompt_user%b%f"
 }
-directory(){
+_theme_directory(){
   # shorten after 6 folders
  #echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
  #get_pretty_path
@@ -437,7 +438,7 @@ directory(){
     echo "%F{white}%(6~.%-1~/…/%4~.%5~)%f"
   fi
 }
-exec_time(){
+_theme_exec_time(){
   if [[ $_THEME_INFO_LEVEL -ge 1 ]] && [[ $ENABLE_EXEC_TIME -eq 1 ]]; then
     local MS=$(($elapsed%1000))
     local T=$(($elapsed/1000))
@@ -484,7 +485,7 @@ toggle_host_info(){
     fi
     #configure_prompt
     #echo "HOSTINFO"
-    set_term_title
+    _theme_set_term_title
     zle reset-prompt
 }
 
@@ -498,7 +499,7 @@ toggle_pretty_dir(){
     zle reset-prompt
 }
 
-battery_info() {
+_theme_battery_info() {
   if command -v upower &> /dev/null; then
     if [[ $_THEME_INFO_LEVEL -ge 4 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
@@ -529,7 +530,7 @@ battery_info() {
     fi
   fi
 }
-host_info(){
+_theme_host_info(){
     if [[ $SHOW_HOST_INFO -eq 1 ]]; then
       if [[ $IS_REMOTE_HOST -eq 1 ]]; then
         echo "%F{237}@%F{yellow}%m%f"
@@ -538,13 +539,13 @@ host_info(){
       fi
     fi
 }
-clock(){
+_theme_clock(){
   if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
 
-git_info() {
+_theme_git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
   if [[ $_THEME_INFO_LEVEL -ge 2 ]] && [[ $ENABLE_GIT_INFO -eq 1 ]]; then
     # Exit if not inside a Git repository
@@ -553,12 +554,23 @@ git_info() {
     # Git branch/tag, or name-rev if on detached head
     local GIT_LOCATION=${$(git symbolic-ref -q HEAD || git name-rev --name-only --no-undefined --always HEAD)#(refs/heads/|tags/)}
 
-    local AHEAD="%F{red}⇡NUM%f"
-    local BEHIND="%F{cyan}⇣NUM%f"
+
+
+
+    local -a GIT_INFO
+    GIT_INFO+=( " %F{240} $GIT_LOCATION" )
+      #[ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
+    if [[ $ENABLE_GIT_INFO_EXTRA -eq 1 ]]; then
+
+    local GIT_UNTRACKED=$(git ls-files --others | wc -l)
+    local GIT_MODIFIED=$(git diff --numstat | wc -l)
+    local GIT_STAGED=$(git diff --cached --numstat | wc -l)
+    local AHEAD="%F{red}↑NUM%f"
+    local BEHIND="%F{green}↓NUM%f"
     local MERGING="%F{magenta}⚡︎%f"
-    local UNTRACKED="%F{red}●%f"
-    local MODIFIED="%F{yellow}●%f"
-    local STAGED="%F{green}●%f"
+    local UNTRACKED="%F{red}$GIT_UNTRACKED%f"
+    local MODIFIED="%F{yellow}$GIT_MODIFIED%f"
+    local STAGED="%F{cyan}$GIT_STAGED%f"
 
     local -a DIVERGENCES
     local -a FLAGS
@@ -590,11 +602,9 @@ git_info() {
       FLAGS+=( "$STAGED" )
     fi
 
-    local -a GIT_INFO
-    GIT_INFO+=( " %F{240} $GIT_LOCATION" )
-    [ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
-    [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
-    [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)FLAGS}" )
+      [[ ${#DIVERGENCES[@]} -ne 0 ]] && GIT_INFO+=( "${(j::)DIVERGENCES}" )
+      [[ ${#FLAGS[@]} -ne 0 ]] && GIT_INFO+=( "${(j: :)FLAGS}" )
+    fi
     #GIT_INFO+=( "" )
     echo "${(j: :)GIT_INFO}%f"
   fi
@@ -702,7 +712,7 @@ sudo-command-line() {
     zle redisplay
   }
 }
-function get_rel_git_path(){
+get_rel_git_path(){
     local targetFolder=$(git rev-parse --show-toplevel)
     local git_workdir=$(basename $targetFolder)
     local currentFolder=$(pwd)
@@ -724,7 +734,7 @@ function get_rel_git_path(){
     #current_pretty_dir="%F{240}%F{cyan}$git_workdir%f$DIR_CHAR$result"
     echo $current_pretty_dir
 }
-function get_pretty_path(){
+get_pretty_path(){
 
     # git stuff
     local git_dir=
