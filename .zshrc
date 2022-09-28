@@ -21,11 +21,12 @@ ENABLE_HOST_ALWAYS=0
 TWO_LINE_PROMPT_CHAR="➜ "
 ONE_LINE_PROMPT_CHAR="➜ "
 
-PROMPT_ALTERNATIVE=twoline
+PROMPT_ALTERNATIVE=twolinePRETTY_PATH_PREFIX_COUNT
 NEWLINE_BEFORE_PROMPT=yes
 
 DIR_CHAR="%F{cyan}/%f"
-MAX_FOLDER_DEPTH=255
+PRETTY_PATH_MAX_FOLDER_DEPTH=3
+PRETTY_PATH_PREFIX_COUNT=1
 
 #HOME_SYMBOL=🏠
 HOME_SYMBOL="~"
@@ -55,6 +56,14 @@ PROMPT_EOL_MARK=""
 
 # timer variable
 elapsed=0
+
+prompt_user="$(whoami)"
+# logo for users 
+[[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
+# Skull emoji for root terminal
+[ "$EUID" -eq 0 ] && prompt_user=💀
+
+current_pretty_dir="%(4~.%-1~/…/%2~.%3~)"
 
 # configure key keybindings
 bindkey -e                                        # emacs key bindings
@@ -244,7 +253,7 @@ if [ "$color_prompt" = yes ]; then
     ZSH_HIGHLIGHT_STYLES[redirection]=fg=blue,bold
     ZSH_HIGHLIGHT_STYLES[comment]=fg=black,bold
     ZSH_HIGHLIGHT_STYLES[named-fd]=none
-    ZSH_HIGHLIGHT_STYLES[numeric-fd]=none
+    ZSH_HIGHLIGHT_STYLES[numeric-fd]=noneTERM
     ZSH_HIGHLIGHT_STYLES[arg0]=fg=cyan
     ZSH_HIGHLIGHT_STYLES[bracket-error]=fg=red,bold
     ZSH_HIGHLIGHT_STYLES[bracket-level-1]=fg=blue,bold
@@ -259,15 +268,18 @@ else
 fi
 unset color_prompt force_color_prompt
 
+#TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
 
 # If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
-    TERM_TITLE=$'\e]0;${debian_chroot:+($debian_chroot)}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))}$prompt_user: %~\a'
-    ;;
-*)
-    ;;
-esac
+#case "$TERM" in
+#xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
+#    TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
+#    ;;
+#*)
+#    ;;prompt_user
+#esac
+
+TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
 
 preexec() {
   # exec timer
@@ -369,13 +381,6 @@ fi
 
 ### HELPER FUNCTIONS
 user(){
-  local prompt_user="$(whoami)"
-
-  # logo for users 
-  [[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
-
-  # Skull emoji for root terminal
-  [ "$EUID" -eq 0 ] && prompt_user=💀
   echo "%(#.%F{red}.%F{blue})$prompt_user%b%f"
 }
 directory(){
@@ -650,7 +655,8 @@ function get_rel_git_path(){
       currentFolder=$(dirname $currentFolder)
     done
 
-    echo "%F{237}%B%F{cyan}$git_workdir%f%b$DIR_CHAR$result"
+    current_pretty_dir="%F{237}%B%F{cyan}$git_workdir%f%b$DIR_CHAR$result"
+    echo $current_pretty_dir
 }
 function get_pretty_path(){
 
@@ -670,23 +676,15 @@ function get_pretty_path(){
 
     [[ $is_in_git -eq 1 ]] && git_dir=$(git rev-parse --show-toplevel)
 
-    #echo "DEBUG git: $is_in_git"
-    #echo "DEBUG git_dir: $git_dir"
-    #echo "DEBUG HOME: $HOME"
-    #echo "DEBUG depth: $depth"
-
     local targetFolder=/
     local currentFolder=$(pwd)
     local result=
-    local is_shortening=0
 
     while [ "$currentFolder" != "$targetFolder" ];do
 
-    #echo $counter
-    #echo "DEBUG currentFolder: $currentFolder"
-    local folderName=$(basename $currentFolder)
+      local folderName=$(basename $currentFolder)
+
       if [ "$currentFolder" = "$HOME" ]; then # is current git directory
-        #echo "DEBUG HOME!!"
         if [ -z $result ]; then
             result="$HOME_SYMBOL"
         else
@@ -698,20 +696,11 @@ function get_pretty_path(){
         result="%F{237}%B%F{cyan}$folderName%b%f$DIR_CHAR$result"
       elif [ -z $result ]; then
         result="%F{white}$folderName%f" # current dir no ending slash
-
       else
-        if [ $depth -ne $MAX_FOLDER_DEPTH ] && [ $counter -lt $MAX_FOLDER_DEPTH ]; then
-            result="$folderName$DIR_CHAR$result"
-        else
-            result="${folderName:0:1}…$DIR_CHAR$result"
-            #result="$counter... $folderName$DIR_CHAR$result"
-            #result="...$DIR_CHAR$result"
-            is_shortening=1
-            #currentFolder=$(dirname $currentFolder)
-        fi
-    fi
+        result="$folderName$DIR_CHAR$result"
+      fi
       currentFolder=$(dirname $currentFolder)
-      ((counter++))
+
     done
 
     [[ "$is_named_folder" -eq 0 ]] && echo -n "$DIR_CHAR"
