@@ -526,8 +526,8 @@ host_info(){
       fi
     fi
 }
-function clock(){
-  if [[ $ENABLE_CLOCK -eq 1 ]]; then
+clock(){
+  if [[ $SHOW_EXTENDED_INFO -ge 1 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
