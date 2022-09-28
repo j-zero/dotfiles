@@ -441,6 +441,7 @@ toggle_pretty_dir(){
 }
 
 battery_info() {
+  if command -v upower &> /dev/null; then
     if [[ $SHOW_EXTENDED_INFO -eq 1 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
@@ -468,6 +469,7 @@ battery_info() {
           echo " $BAT_STATE_STR%f"
       fi
     fi
+  fi
 }
 host_info(){
   if  [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
