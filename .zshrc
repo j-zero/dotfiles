@@ -13,7 +13,7 @@ ENABLE_PRETTY_PATH_GIT_DIR=1
 
 ENABLE_EXEC_TIME=1
 
-_THEME_INFO_LEVEL=1
+_THEME_INFO_LEVEL=2
 
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
@@ -200,7 +200,8 @@ fi
 configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
-  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.) %F{cyan}$(exec_time)%f'
+  
+  RPROMPT=$'%(?.%F{green}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(exec_time)'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
@@ -283,16 +284,6 @@ else
 fi
 unset color_prompt force_color_prompt
 
-#TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
-
-# If this is an xterm set the title to user@host:dir
-#case "$TERM" in
-#xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty)
-#    TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
-#    ;;
-#*)
-#    ;;prompt_user
-#esac
 
 if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
   SHOW_HOST_INFO=$AUTO_SSH_HOST
@@ -438,7 +429,7 @@ directory(){
   fi
 }
 exec_time(){
-  if [[ $ENABLE_EXEC_TIME -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 1 ]] && [[ $ENABLE_EXEC_TIME -eq 1 ]]; then
     local MS=$(($elapsed%1000))
     local T=$(($elapsed/1000))
 
@@ -451,7 +442,7 @@ exec_time(){
     (( $H > 0 )) && echo -n "%F{cyan}$H%F{white}h%f"
     (( $M > 0 )) && echo -n "%F{cyan}$M%F{white}m%f"
     #(( $D > 0 || $H > 0 || $M > 0 )) && echo ""
-    echo -n "%F{cyan}$S%F{white}.%F{cyan}$(printf '%03d' $MS)%F{white}s%f"
+    echo -n " %F{cyan}$S%F{white}.%F{cyan}$(printf '%03d' $MS)%F{white}s%f"
   fi
 }
 toggle_oneline_prompt(){
@@ -467,18 +458,11 @@ toggle_oneline_prompt(){
 __toggle_info_level(){
 
     ((_THEME_INFO_LEVEL++))
-    if [[ $_THEME_INFO_LEVEL -gt 3 ]]; then
+    if [[ $_THEME_INFO_LEVEL -gt 4 ]]; then
       _THEME_INFO_LEVEL=0
     fi
+    #echo "\nDEBUG: info level = $_THEME_INFO_LEVEL\n"
 
-    #  _THEME_INFO_LEVEL=1
-    #elif [[ $_THEME_INFO_LEVEL -eq 1 ]]; then
-    #   _THEME_INFO_LEVEL=2
-    #elif [[ $_THEME_INFO_LEVEL -eq 2 ]]; then
-    #   _THEME_INFO_LEVEL=3
-    #else
-    #  _THEME_INFO_LEVEL=0
-    #fi
     #configure_prompt
     zle reset-prompt
 }
@@ -507,7 +491,7 @@ toggle_pretty_dir(){
 
 battery_info() {
   if command -v upower &> /dev/null; then
-    if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $_THEME_INFO_LEVEL -ge 4 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -546,14 +530,14 @@ host_info(){
     fi
 }
 clock(){
-  if [[ $_THEME_INFO_LEVEL -ge 2 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_CLOCK -eq 1 ]]; then
     echo " %f%D{%H:%M:%S}"
   fi
 }
 
 git_info() {
   # based on https://joshdick.net/2017/06/08/my_git_prompt_for_zsh_revisited.html
-  if [[ $_THEME_INFO_LEVEL -ge 1 ]] && [[ $ENABLE_GIT_INFO -eq 1 ]]; then
+  if [[ $_THEME_INFO_LEVEL -ge 2 ]] && [[ $ENABLE_GIT_INFO -eq 1 ]]; then
     # Exit if not inside a Git repository
     ! git rev-parse --is-inside-work-tree > /dev/null 2>&1 && return
 
@@ -723,8 +707,12 @@ function get_rel_git_path(){
       fi
       currentFolder=$(dirname $currentFolder)
     done
-
-    current_pretty_dir="%F{237}%F{cyan}$git_workdir%f$DIR_CHAR$result"
+    if [ -z $result ]; then
+        current_pretty_dir="%F{240}%F{cyan}$git_workdir%f"
+    else
+        current_pretty_dir="%F{240}%F{cyan}$git_workdir%f$DIR_CHAR$result"
+    fi
+    #current_pretty_dir="%F{240}%F{cyan}$git_workdir%f$DIR_CHAR$result"
     echo $current_pretty_dir
 }
 function get_pretty_path(){
@@ -762,7 +750,7 @@ function get_pretty_path(){
         currentFolder=$(dirname "$HOME")
         is_named_folder=1
       elif [ ! -z $git_dir ] && [ "$currentFolder" = "$git_dir" ]; then # is current git directory
-        result="%F{237}%F{cyan}$folderName%f$DIR_CHAR$result"
+        result="%F{240}%F{cyan}$folderName%f$DIR_CHAR$result"
       elif [ -z $result ]; then
         result="%F{white}$folderName%f" # current dir no ending slash
       else
