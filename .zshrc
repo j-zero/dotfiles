@@ -39,6 +39,7 @@ AUTOUPDATE=0
 
 
 SHOW_HOST_INFO=0 # show host info variable
+IS_REMOTE_HOST=0
 
 [ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
 
@@ -286,10 +287,13 @@ unset color_prompt force_color_prompt
 #    ;;prompt_user
 #esac
 
-if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
+if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
   SHOW_HOST_INFO=$AUTO_SSH_HOST
   if [[ ENABLE_HOST_ALWAYS -eq 1 ]]; then
     SHOW_HOST_INFO=1
+  fi
+  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+    IS_REMOTE_HOST=1
   fi
 fi
 
@@ -512,7 +516,11 @@ battery_info() {
 }
 host_info(){
     if [[ $SHOW_HOST_INFO -eq 1 ]]; then
-      echo "%F{237}@%F{white}%m%f"
+      if [[ $IS_REMOTE_HOST -eq 1 ]]; then
+        echo "%F{237}@%F{green}%m%f"
+      else
+        echo "%F{237}@%F{white}%m%f"
+      fi
     fi
 }
 function clock(){
