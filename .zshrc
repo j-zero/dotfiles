@@ -4,7 +4,7 @@
 # config
 #
 ENABLE_BATTERY=1
-ENABLE_BATTERY_ON_CHARGE=0
+ENABLE_BATTERY_ON_CHARGE=1
 ENABLE_CLOCK=1
 ENABLE_GIT_INFO=1
 
@@ -15,13 +15,15 @@ ENABLE_EXEC_TIME=1
 
 SHOW_EXTENDED_INFO=1
 
+
 # always show hostname, not in ssh sessions alone
 ENABLE_HOST_ALWAYS=0
+
 
 TWO_LINE_PROMPT_CHAR="➜ "
 ONE_LINE_PROMPT_CHAR="➜ "
 
-PROMPT_ALTERNATIVE=twolinePRETTY_PATH_PREFIX_COUNT
+PROMPT_ALTERNATIVE=twoline
 NEWLINE_BEFORE_PROMPT=yes
 
 DIR_CHAR="%F{%(#.red.green)}/%f"
@@ -35,6 +37,7 @@ PLUGIN_BASE_DIR="$HOME/.zsh"
 AUTOUPDATE=0
 
 
+SHOW_HOST_INFO=0 # show host info variable
 
 [ -f $HOME/.zshrc.settings ] && . $HOME/.zshrc.settings
 
@@ -88,8 +91,11 @@ bindkey -M viins '\e\e' sudo-command-line
 zle -N toggle_oneline_prompt
 bindkey ^P toggle_oneline_prompt
 
-zle -N toggle_prompt_info
-bindkey ^H toggle_prompt_info
+zle -N toggle_extended_info
+bindkey ^J toggle_extended_info
+
+zle -N toggle_host_info
+bindkey ^H toggle_host_info
 
 zle -N toggle_pretty_dir
 bindkey ^G toggle_pretty_dir
@@ -193,10 +199,10 @@ configure_prompt() {
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(user)$(clock)$(battery_info)$(host_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}[ $(user)$(host_info)$(clock)$(battery_info)$(git_info)%F{%(#.red.green)} ]%f $(directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
           ;;
     esac
     #unset prompt_user
@@ -278,8 +284,16 @@ unset color_prompt force_color_prompt
 #*)
 #    ;;prompt_user
 #esac
-
-TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
+set_term_title(){
+  if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]] || [[ $SHOW_HOST_INFO -eq 1 ]]; then
+    #echo "SSH!"
+    TERM_TITLE=$'\e]0;$prompt_user@%m: $current_pretty_dir\a'
+  else
+    TERM_TITLE=$'\e]0;$prompt_user: $current_pretty_dir\a'
+  fi
+  print -Pnr -- "$TERM_TITLE"
+}
+set_term_title
 
 preexec() {
   # exec timer
@@ -288,7 +302,8 @@ preexec() {
 
 precmd() {
     # Print the previously configured title
-    print -Pnr -- "$TERM_TITLE"
+    set_term_title
+    #print -Pnr -- "$TERM_TITLE"
 
     # Print a new line before the prompt, but only if it is not the first line
     if [ "$NEWLINE_BEFORE_PROMPT" = yes ]; then
@@ -420,13 +435,27 @@ toggle_oneline_prompt(){
     zle reset-prompt
 }
 
-toggle_prompt_info(){
-    if [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
-      SHOW_EXTENDED_INFO=0
-    else
+toggle_extended_info(){
+    if [[ $SHOW_EXTENDED_INFO -eq 0 ]]; then
       SHOW_EXTENDED_INFO=1
+    elif [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
+       SHOW_EXTENDED_INFO=2
+    else
+      SHOW_EXTENDED_INFO=0
     fi
     #configure_prompt
+    zle reset-prompt
+}
+
+toggle_host_info(){
+    if [[ $SHOW_HOST_INFO -eq 1 ]]; then
+      SHOW_HOST_INFO=0
+    else
+      SHOW_HOST_INFO=1
+    fi
+    #configure_prompt
+    #echo "HOSTINFO"
+    set_term_title
     zle reset-prompt
 }
 
@@ -442,7 +471,7 @@ toggle_pretty_dir(){
 
 battery_info() {
   if command -v upower &> /dev/null; then
-    if [[ $SHOW_EXTENDED_INFO -eq 1 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
+    if [[ $SHOW_EXTENDED_INFO -ge 2 ]] && [[ $ENABLE_BATTERY -eq 1 ]]; then
 
       local battery_percent=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E percentage|xargs|cut -d' ' -f2|sed s/%//)
       local battery_state=$(upower -i $(upower -e | grep '/battery') | grep --color=never -E state|xargs|cut -d' ' -f2|sed s/%//)
@@ -472,11 +501,9 @@ battery_info() {
   fi
 }
 host_info(){
-  if  [[ $SHOW_EXTENDED_INFO -eq 1 ]]; then
-   if [[ -n "$SSH_CLIENT" ]] || [ -n "$SSH_TTY" ] || [[ $ENABLE_HOST_ALWAYS -eq 1 ]]; then
-     echo " %F{blue}@%F{white}%m%f"
-   fi
-  fi
+    if [[ $SHOW_HOST_INFO -eq 1 ]]; then
+      echo "%F{237}@%F{white}%m%f"
+    fi
 }
 function clock(){
   if [[ $ENABLE_CLOCK -eq 1 ]]; then
