@@ -24,7 +24,7 @@ ONE_LINE_PROMPT_CHAR="➜ "
 PROMPT_ALTERNATIVE=twolinePRETTY_PATH_PREFIX_COUNT
 NEWLINE_BEFORE_PROMPT=yes
 
-DIR_CHAR="%F{cyan}/%f"
+DIR_CHAR="%F{%(#.red.green)}/%f"
 PRETTY_PATH_MAX_FOLDER_DEPTH=3
 PRETTY_PATH_PREFIX_COUNT=1
 
@@ -655,7 +655,7 @@ function get_rel_git_path(){
       currentFolder=$(dirname $currentFolder)
     done
 
-    current_pretty_dir="%F{237}%B%F{cyan}$git_workdir%f%b$DIR_CHAR$result"
+    current_pretty_dir="%F{237}%F{cyan}$git_workdir%f$DIR_CHAR$result"
     echo $current_pretty_dir
 }
 function get_pretty_path(){
@@ -693,7 +693,7 @@ function get_pretty_path(){
         currentFolder=$(dirname "$HOME")
         is_named_folder=1
       elif [ ! -z $git_dir ] && [ "$currentFolder" = "$git_dir" ]; then # is current git directory
-        result="%F{237}%B%F{cyan}$folderName%b%f$DIR_CHAR$result"
+        result="%F{237}%F{cyan}$folderName%f$DIR_CHAR$result"
       elif [ -z $result ]; then
         result="%F{white}$folderName%f" # current dir no ending slash
       else
