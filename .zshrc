@@ -348,7 +348,7 @@ if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     export LS_COLORS="$LS_COLORS:ow=30;44:" # fix ls color for folders with 777 permissions
 
-    #alias ls='ls --color=auto'
+    alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
@@ -713,7 +713,7 @@ sudo-command-line() {
 _theme_get_rel_git_path(){
     local targetFolder=$(git rev-parse --show-toplevel)
     local git_workdir=$(basename $targetFolder)
-    local currentFolder=$(pwd)
+    local currentFolder=$(realpath $(pwd))
     local result=
 
     while [ "$currentFolder" != "$targetFolder" ];do
@@ -722,7 +722,7 @@ _theme_get_rel_git_path(){
       else
         result="$(basename $currentFolder)$DIR_CHAR$result"
       fi
-      currentFolder=$(dirname $currentFolder)
+      currentFolder=$(dirname $(realpath "$currentFolder"))
     done
     if [ -z $result ]; then
         current_pretty_dir="%F{240}%F{cyan}$git_workdir%f"
