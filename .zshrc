@@ -380,7 +380,7 @@ if command -v exa &> /dev/null; then
 
     exa --git > /dev/null 2>&1
 
-    if [ $? -eq 0]; then
+    if [ $? -eq 0 ]; then
       alias l='exa -lbF --git'                                                # list, size, type, git
       alias ll='exa -lbGF --git'                                             # long list
       alias llm='exa -lbGd --git --sort=modified'                            # long list, modified date sort
