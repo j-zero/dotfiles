@@ -766,7 +766,7 @@ _theme_get_pretty_path(){
         fi
         currentFolder=$(dirname "$HOME")
         is_named_folder=1
-      elif [ ! -z $git_dir ] && [ "$currentFolder" = "$git_dir" ]; then # is current git directory
+      elif [ ! -z $git_dir ] && [ $(realpath "$currentFolder") = "$git_dir" ]; then # is current git directory
         result="%F{240}%F{cyan}$folderName%f$DIR_CHAR$result"
       elif [ -z $result ]; then
         result="%F{white}$folderName%f" # current dir no ending slash
