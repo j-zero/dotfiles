@@ -546,9 +546,9 @@ _theme_battery_info() {
 _theme_host_info(){
     if [[ $SHOW_HOST_INFO -eq 1 ]]; then
       if [[ $IS_REMOTE_HOST -eq 1 ]]; then
-        echo "%F{gray}@%F{yellow}%m%f"
+        echo "%F{cyan}@%F{yellow}%m%f"
       else
-        echo "%F{gray}@%F{white}%m%f"
+        echo "%F{cyan}@%F{white}%m%f"
       fi
     fi
 }
