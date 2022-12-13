@@ -21,8 +21,9 @@ ENABLE_HOST_ALWAYS=0
 AUTO_SSH_HOST=1
 
 
-TWO_LINE_PROMPT_CHAR="➜ "
-ONE_LINE_PROMPT_CHAR="➜ "
+TWO_LINE_PROMPT_CHAR="❯ "
+#ONE_LINE_PROMPT_CHAR="➜ "
+ONE_LINE_PROMPT_CHAR="❯ "
 
 PROMPT_ALTERNATIVE=twoline
 NEWLINE_BEFORE_PROMPT=yes
@@ -65,7 +66,7 @@ elapsed=0
 _THEME_READY=1
 
 prompt_user="$(whoami)"
-# logo for users 
+# logo for users
 [[ "$prompt_user" == "ringej" || "$prompt_user" == "johannes" ]] && prompt_user=Ɽ
 # Skull emoji for root terminal
 [ "$EUID" -eq 0 ] && prompt_user=💀
@@ -201,8 +202,8 @@ fi
 configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
-  
-  RPROMPT=$'%(?.%F{154}✓%f. %? %F{red}%B⨯%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
+ 
+  RPROMPT=$'%(?.%F{154}✓%f. %? %F{red}%B✖%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
