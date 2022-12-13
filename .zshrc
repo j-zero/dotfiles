@@ -575,13 +575,21 @@ _theme_git_info() {
     # Git branch/tag, or name-rev if on detached head
     local GIT_LOCATION=${$(git symbolic-ref -q HEAD || git name-rev --name-only --no-undefined --always HEAD)#(refs/heads/|tags/)}
 
-    local -a GIT_INFO
-    GIT_INFO+=( " %F{240} $GIT_LOCATION" )
 
       #[ -n "$GIT_STATUS" ] && GIT_INFO+=( "$GIT_STATUS" )
     if if [[ $_THEME_INFO_LEVEL -ge 3 ]] && [[ $ENABLE_GIT_INFO_EXTRA -eq 1 ]]; then
 
-      local GIT_UNTRACKED=$(git ls-files --others | wc -l)
+      local GIT_WARNING=$(git ls-files --others 2>&1 | grep warning > /dev/null 2>&1; echo $?)
+
+      local -a GIT_INFO
+      if [ "$GIT_WARNING" -eq 0 ]; then
+        GIT_INFO+=( " %F{yellow}%F{240}(%F{yellow}warning%F{240}) %F{240} $GIT_LOCATION" )
+      else
+        GIT_INFO+=( " %F{green} $GIT_LOCATION" )
+      fi
+
+
+      local GIT_UNTRACKED=$(git ls-files --others 2>/dev/null | wc -l)
       local GIT_MODIFIED=$(git diff --numstat | wc -l)
       local GIT_STAGED=$(git diff --cached --numstat | wc -l)
       local AHEAD="%F{162}↑NUM%f"
