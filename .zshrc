@@ -22,8 +22,13 @@ AUTO_SSH_HOST=1
 
 
 TWO_LINE_PROMPT_CHAR="❯ "
+TWO_LINE_PREFIX_1="┌─"
+TWO_LINE_PREFIX_2="└─"
 #ONE_LINE_PROMPT_CHAR="➜ "
 ONE_LINE_PROMPT_CHAR="❯ "
+
+BLOCK_CHAR_LEFT="[ "
+BLOCK_CHAR_RIGHT=" ]"
 
 PROMPT_ALTERNATIVE=twoline
 NEWLINE_BEFORE_PROMPT=yes
@@ -202,15 +207,16 @@ fi
 configure_prompt() {
 
   # Right-side prompt with exit codes and background processes
- 
+
   RPROMPT=$'%(?.%F{154}✓%f. %? %F{red}%B✖%b%f)%(1j. %j %F{yellow}%B⚙%b%f.)$(_theme_exec_time)'
 
   case "$PROMPT_ALTERNATIVE" in
       twoline)
-        PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)} ]%f $(_theme_directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}$TWO_LINE_PREFIX_1%F{%(#.red.green)}$BLOCK_CHAR_LEFT$(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)}$BLOCK_CHAR_RIGHT%f $(_theme_directory) \n%F{%(#.red.green)}$TWO_LINE_PREFIX_2%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
+        #PROMPT=$'%F{%(#.red.green)}┌─%F{%(#.red.green)}[ $(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)} ]%f $(_theme_directory) \n%F{%(#.red.green)}└─%F{%(#.red.green)}$TWO_LINE_PROMPT_CHAR%f'
           ;;
       oneline)
-        PROMPT=$'%F{%(#.red.green)}[ $(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)} ]%f $(_theme_directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
+        PROMPT=$'%F{%(#.red.green)}$BLOCK_CHAR_LEFT$(_theme_user)$(_theme_host_info)$(_theme_clock)$(_theme_battery_info)$(_theme_git_info)%F{%(#.red.green)}$BLOCK_CHAR_RIGHT%f $(_theme_directory) %F{%(#.red.green)}$ONE_LINE_PROMPT_CHAR%f'
           ;;
     esac
     #unset prompt_user
@@ -358,6 +364,7 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
     alias diff='diff --color=auto'
     alias ip='ip --color=auto'
+    alias vi='vim'
 
     export LESS_TERMCAP_mb=$'\E[1;31m'     # begin blink
     export LESS_TERMCAP_md=$'\E[1;36m'     # begin bold
