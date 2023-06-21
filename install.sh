@@ -16,6 +16,7 @@ cp -v .config/terminator/config ~/.config/terminator/config.datenpirat.bak
 
 # Install
 cp -v .zshrc ~/
+cp -v .zsh_autorun ~/
 cp -v .vimrc ~/
 cp -v .config/terminator/config ~/.config/terminator/config
 cp -v .vim/colors/codedark.vim ~/.vim/colors/codedark.vim
