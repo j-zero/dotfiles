@@ -811,5 +811,4 @@ _theme_get_pretty_path(){
     echo "$result"
 }
 
-
-
+source ~/.zsh_autorun
