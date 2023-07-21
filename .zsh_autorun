@@ -1,0 +1,8 @@
+#!/bin/zsh
+# Start tmux session on login if tmux exists, logout when tmux is detached/closed
+if command -v tmux &> /dev/null; then
+  if ! { [ -n "$SSH_TTY" ] && [ -n "$TMUX" ]; } then
+    tmux new -As0
+    logout
+  fi
+fi
