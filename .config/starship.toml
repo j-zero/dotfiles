@@ -51,11 +51,12 @@ threshold = 100
 [username]
 show_always = true
 style_user = "fg:#d8dee9 bg:#2e3440"
-style_root = "fg:#d8dee9 bg:#2e3440"
+style_root = "fg:red bg:#2e3440"
 format = '[ $user ]($style)'
+aliases = { "ringej" = "Ʀ", "johannes" = "Ʀ", "root" = "💀" }
 
 [hostname]
-ssh_only = false
+ssh_only = true
 format = '[ @](fg:#5e81ac bg:#3B4252)[$hostname ](fg:#d8dee9 bg:#3B4252)'
 #trim_at = '.companyname.com'
 disabled = false
