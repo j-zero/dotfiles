@@ -1,22 +1,18 @@
 [global_config]
-  title_transmit_bg_color = "#2777ff"
-  title_receive_bg_color = "#d41919"
-  title_inactive_fg_color = "#ffffff"
-  title_inactive_bg_color = "#23252e"
-  suppress_multiple_term_dialog = True
   putty_paste_style = True
   putty_paste_style_source_clipboard = True
 [keybindings]
 [profiles]
   [[default]]
     icon_bell = False
-    background_darkness = 0.85
+    background_color = "#2E3440"
+    background_darkness = 0.9
     background_type = transparent
-    cursor_color = "#aaaaaa"
-    font = Monospace 10
+    font = FiraCode Nerd Font Propo Medium 10
+    foreground_color = "#D8DEE9"
     show_titlebar = False
     scrollbar_position = hidden
-    palette = "#1f2229:#d41919:#5ebdab:#fea44c:#367bf0:#9755b3:#49aee6:#e6e6e6:#198388:#ec0101:#47d4b9:#ff8a18:#277fff:#962ac3:#05a1f7:#ffffff"
+    palette = "#3b4252:#bf616a:#a3be8c:#ebcb8b:#81a1c1:#b48ead:#88c0d0:#e5e9f0:#4c566a:#bf616a:#a3be8c:#ebcb8b:#81a1c1:#b48ead:#8fbcbb:#eceff4"
     use_system_font = False
 [layouts]
   [[default]]
